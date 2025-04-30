@@ -413,8 +413,10 @@ export class WalletBridge extends EventEmitter {
     }
   }
 
-  public terminateSession(sessionId: string): void {
+  public async terminateSession(sessionId: string): Promise<void> {
     this.sessions.delete(sessionId);
+    localStorage.removeItem('freobus_current_session');
+    this.persistState();
   }
 
   public setupPortConnection(port: Port): void {
@@ -476,6 +478,7 @@ export class WalletBridge extends EventEmitter {
     };
 
     this.registerSessionLink(walletSessionId, platformSessionId);
+    await this.persistSession(session);
     return session;
   }
 
@@ -557,5 +560,71 @@ export class WalletBridge extends EventEmitter {
     };
 
     this.emit('siteUpdated', { origin, chainId, accounts });
+  }
+
+  private async loadPersistedState(): Promise<void> {
+    try {
+      const persistedState = localStorage.getItem('freobus_wallet_state');
+      if (persistedState) {
+        const state = JSON.parse(persistedState);
+        if (state.sessions) {
+          this.sessions = new Map(Object.entries(state.sessions));
+        }
+        if (state.connectedSites) {
+          this.state.connectedSites = state.connectedSites;
+        }
+      }
+    } catch (error) {
+      this.emit('error', error);
+    }
+  }
+
+  private persistState(): void {
+    try {
+      const state = {
+        sessions: Object.fromEntries(this.sessions),
+        connectedSites: this.state.connectedSites
+      };
+      localStorage.setItem('freobus_wallet_state', JSON.stringify(state));
+    } catch (error) {
+      this.emit('error', error);
+    }
+  }
+
+  public async autoConnect(): Promise<boolean> {
+    try {
+      const persistedSession = await this.getPersistedSession();
+      if (persistedSession && await this.validateSession(persistedSession.id)) {
+        await this.connect();
+        this.emit('autoConnected', persistedSession);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      this.emit('error', error);
+      return false;
+    }
+  }
+
+  private async getPersistedSession(): Promise<UnifiedSession | null> {
+    try {
+      const sessionData = localStorage.getItem('freobus_current_session');
+      if (sessionData) {
+        return JSON.parse(sessionData);
+      }
+      return null;
+    } catch (error) {
+      this.emit('error', error);
+      return null;
+    }
+  }
+
+  public async persistSession(session: UnifiedSession): Promise<void> {
+    try {
+      localStorage.setItem('freobus_current_session', JSON.stringify(session));
+      this.persistState();
+    } catch (error) {
+      this.emit('error', error);
+    }
   }
 } 

@@ -1,250 +1,241 @@
 import { EventEmitter } from 'events';
-import type { WalletConfig, Network, Account, TransactionRequest, WalletState, ConnectedSite, WalletBridgeConfig } from './types';
+import type { WalletConfig, Network, Account, TransactionRequest, WalletState, ConnectedSite, WalletBridgeConfig, Session, UnifiedSession, SessionProof } from './types';
 
 const DEFAULT_NETWORKS: Network[] = [
   {
-    chainId: "0x1",
-    name: "Ethereum Mainnet",
-    rpcUrl: "https://mainnet.infura.io/v3/6131105f1e4c4841a297c5392effa977",
-    currencySymbol: "ETH",
-    blockExplorerUrl: "https://etherscan.io"
-  },
-  {
-    chainId: "0xaa36a7",
-    name: "Sepolia Testnet",
-    rpcUrl: "https://sepolia.infura.io/v3/6131105f1e4c4841a297c5392effa977",
-    currencySymbol: "ETH",
-    blockExplorerUrl: "https://sepolia.etherscan.io"
+    chainId: '1',
+    name: 'Ethereum Mainnet',
+    rpcUrl: 'https://mainnet.infura.io/v3/',
+    currencySymbol: 'ETH',
+    blockExplorerUrl: 'https://etherscan.io'
   }
 ];
 
 export class WalletBridge extends EventEmitter {
-  private platformOrigin: string;
-  private config: WalletConfig;
-  private state: WalletState;
-  private port: chrome.runtime.Port | null = null;
-  private isConnected: boolean = false;
-  private accounts: string[] = [];
+  private config: WalletBridgeConfig;
+  private sessions: Map<string, Session>;
+  private accounts: Account[] = [];
   private chainId: string = '';
+  private state: WalletState = {
+    isUnlocked: false,
+    accounts: [],
+    networks: DEFAULT_NETWORKS,
+    selectedNetwork: DEFAULT_NETWORKS[0],
+    connectedSites: {}
+  };
+  private messageHandlers: Map<string, (message: any) => Promise<any>> = new Map();
 
   constructor(config: WalletBridgeConfig) {
     super();
-    this.platformOrigin = config.platformOrigin;
-    this.config = {
-      enableHardwareAuth: config?.enableHardwareAuth ?? false,
-      enableEIP4361: config?.enableEIP4361 ?? true,
-      maxRetryAttempts: config?.maxRetryAttempts ?? 5,
-      backoffMultiplier: config?.backoffMultiplier ?? 1.5,
-      initialBackoffDelay: config?.initialBackoffDelay ?? 1000,
-      autoConnect: config?.autoConnect ?? true,
-      persistConnection: config?.persistConnection ?? true
-    };
-    this.state = {
-      isUnlocked: false,
-      accounts: [],
-      networks: DEFAULT_NETWORKS,
-      selectedNetwork: DEFAULT_NETWORKS[0],
-      connectedSites: {}
-    };
+    this.config = config;
+    this.sessions = new Map();
+    this.setupMessageHandlers();
   }
 
-  async initialize(): Promise<boolean> {
+  private setupMessageHandlers() {
+    this.messageHandlers.set('accountsChanged', async (message) => {
+      this.state.accounts = message.accounts;
+      this.accounts = message.accounts;
+      this.emit('accountsChanged', message.accounts);
+      return { success: true };
+    });
+
+    this.messageHandlers.set('networkChanged', async (message) => {
+      this.state.selectedNetwork = message.network;
+      this.chainId = message.network.chainId;
+      this.emit('chainChanged', message.network.chainId);
+      return { success: true };
+    });
+
+    this.messageHandlers.set('unlock', async () => {
+      this.state.isUnlocked = true;
+      this.emit('unlock');
+      return { success: true };
+    });
+
+    this.messageHandlers.set('lock', async () => {
+      this.state.isUnlocked = false;
+      this.emit('lock');
+      return { success: true };
+    });
+
+    this.messageHandlers.set('connect', async (message) => {
+      const origin = message.origin || 'unknown';
+      this.state.connectedSites[origin] = message.connection;
+      this.emit('connect');
+      return { success: true };
+    });
+
+    this.messageHandlers.set('disconnect', async (message) => {
+      const origin = message.origin || 'unknown';
+      delete this.state.connectedSites[origin];
+      this.emit('disconnect');
+      return { success: true };
+    });
+  }
+
+  public async connect(): Promise<boolean> {
+    if (this.state.isUnlocked) return true;
+    
     try {
-      // Initialize wallet connection
-      this.isConnected = true;
+      this.state.isUnlocked = true;
       this.emit('connect');
       return true;
     } catch (error) {
-      console.error('Failed to initialize wallet bridge:', error);
-      return false;
+      this.emit('error', error);
+      throw error;
     }
   }
 
-  private setupMessageListeners() {
-    if (!this.port) return;
-
-    this.port.onMessage.addListener((message: any) => {
-      switch (message.type) {
-        case 'accountsChanged':
-          this.state.accounts = message.accounts;
-          this.accounts = message.accounts;
-          this.emit('accountsChanged', message.accounts);
-          break;
-        case 'networkChanged':
-          this.state.selectedNetwork = message.network;
-          this.chainId = message.network.chainId;
-          this.emit('chainChanged', message.network.chainId);
-          break;
-        case 'unlock':
-          this.state.isUnlocked = true;
-          this.emit('unlock');
-          break;
-        case 'lock':
-          this.state.isUnlocked = false;
-          this.emit('lock');
-          break;
-        case 'connect':
-          this.state.connectedSites[this.platformOrigin] = message.connection;
-          this.emit('connect');
-          break;
-        case 'disconnect':
-          delete this.state.connectedSites[this.platformOrigin];
-          this.emit('disconnect');
-          break;
-      }
-    });
-
-    this.port.onDisconnect.addListener(() => {
-      this.port = null;
-      this.emit('disconnect');
-    });
-  }
-
-  async connect(): Promise<boolean> {
+  public async disconnect(): Promise<void> {
+    if (!this.state.isUnlocked) return;
+    
     try {
-      // Implement wallet connection logic
-      this.isConnected = true;
-      this.accounts = ['0x123...']; // Replace with actual account
-      this.chainId = '0x1'; // Replace with actual chain ID
-      this.state.accounts = this.accounts;
-      this.state.selectedNetwork = this.state.networks.find(n => n.chainId === this.chainId) || DEFAULT_NETWORKS[0];
-      this.emit('accountsChanged', this.accounts);
-      this.emit('chainChanged', this.chainId);
-      return true;
+      this.state.isUnlocked = false;
+      this.accounts = [];
+      this.emit('disconnect');
     } catch (error) {
-      console.error('Failed to connect wallet:', error);
-      return false;
+      this.emit('error', error);
+      throw error;
     }
   }
 
-  async disconnect(): Promise<void> {
-    this.isConnected = false;
-    this.accounts = [];
-    this.chainId = '';
-    this.state.accounts = [];
-    this.state.selectedNetwork = DEFAULT_NETWORKS[0];
-    this.emit('disconnect');
+  public async getAccounts(): Promise<Account[]> {
+    if (!this.state.isUnlocked) throw new Error('Wallet not connected');
+    return this.accounts;
+  }
+
+  public async requestAccounts(): Promise<Account[]> {
+    if (!this.state.isUnlocked) throw new Error('Wallet not connected');
+    
+    try {
+      const newAccounts: Account[] = []; // Replace with actual account fetching
+      this.accounts = newAccounts;
+      this.state.accounts = newAccounts;
+      return newAccounts;
+    } catch (error) {
+      this.emit('error', error);
+      throw error;
+    }
   }
 
   async signMessage(message: string): Promise<string> {
-    if (!this.isConnected) throw new Error('Wallet not connected');
+    if (!this.state.isUnlocked) throw new Error('Wallet not connected');
     // Implement message signing
     return '0x...'; // Replace with actual signature
   }
 
   async signTransaction(tx: any): Promise<string> {
-    if (!this.isConnected) throw new Error('Wallet not connected');
+    if (!this.state.isUnlocked) throw new Error('Wallet not connected');
     // Implement transaction signing
     return '0x...'; // Replace with actual signed transaction
   }
 
   async sendTransaction(tx: any): Promise<string> {
-    if (!this.isConnected) throw new Error('Wallet not connected');
+    if (!this.state.isUnlocked) throw new Error('Wallet not connected');
     // Implement transaction sending
     return '0x...'; // Replace with actual transaction hash
   }
 
   async switchChain(chainId: string): Promise<boolean> {
-    if (!this.isConnected) throw new Error('Wallet not connected');
+    if (!this.state.isUnlocked) throw new Error('Wallet not connected');
     try {
       this.chainId = chainId;
-      this.state.selectedNetwork = this.state.networks.find(n => n.chainId === chainId) || DEFAULT_NETWORKS[0];
-      this.emit('chainChanged', chainId);
-      return true;
-    } catch (error) {
-      console.error('Failed to switch chain:', error);
+      const network = this.state.networks.find(n => n.chainId === chainId);
+      if (network) {
+        this.state.selectedNetwork = network;
+        this.emit('chainChanged', chainId);
+        return true;
+      }
       return false;
+    } catch (error) {
+      this.emit('error', error);
+      throw error;
     }
   }
 
   async getBalance(address: string): Promise<string> {
-    if (!this.isConnected) throw new Error('Wallet not connected');
+    if (!this.state.isUnlocked) throw new Error('Wallet not connected');
     // Implement balance fetching
     return '0.0'; // Replace with actual balance
   }
 
   async addNetwork(network: Network): Promise<void> {
-    if (!this.port) throw new Error('Not connected');
-
-    await this.sendMessage({
-      type: 'addNetwork',
-      network
-    });
+    if (!this.state.isUnlocked) throw new Error('Wallet not connected');
+    this.state.networks.push(network);
+    this.emit('networkAdded', network);
   }
 
   async addAccount(name?: string): Promise<Account> {
-    if (!this.port) throw new Error('Not connected');
-
-    const response = await this.sendMessage({
-      type: 'addAccount',
-      name
-    });
-
-    return response.account;
+    if (!this.state.isUnlocked) throw new Error('Wallet not connected');
+    const newAccount: Account = {
+      address: '0x...', // Replace with actual address generation
+      name: name || 'Account ' + (this.accounts.length + 1),
+      index: this.accounts.length,
+      balances: {},
+      balance: '0'
+    };
+    this.accounts.push(newAccount);
+    this.state.accounts.push(newAccount);
+    this.emit('accountAdded', newAccount);
+    return newAccount;
   }
 
   async selectAccount(address: string): Promise<void> {
-    if (!this.port) throw new Error('Not connected');
-
-    await this.sendMessage({
-      type: 'selectAccount',
-      address
-    });
+    if (!this.state.isUnlocked) throw new Error('Wallet not connected');
+    const account = this.accounts.find(a => a.address === address);
+    if (!account) throw new Error('Account not found');
+    this.emit('accountSelected', account);
   }
 
   async isUnlocked(): Promise<boolean> {
-    if (!this.port) return false;
-
-    const response = await this.sendMessage({
-      type: 'isUnlocked'
-    });
-
-    return response.isUnlocked;
+    return this.state.isUnlocked;
   }
 
   async unlock(password: string): Promise<boolean> {
-    if (!this.port) return false;
-
-    const response = await this.sendMessage({
-      type: 'unlock',
-      password
-    });
-
-    return response.success;
+    try {
+      // Implement actual password verification
+      this.state.isUnlocked = true;
+      this.emit('unlock');
+      return true;
+    } catch (error) {
+      this.emit('error', error);
+      return false;
+    }
   }
 
   async create(password: string): Promise<void> {
-    if (!this.port) throw new Error('Not connected');
+    try {
+      // Implement actual wallet creation
+      this.state.isUnlocked = true;
+      this.emit('walletCreated');
+    } catch (error) {
+      this.emit('error', error);
+      throw error;
+    }
+  }
 
-    await this.sendMessage({
-      type: 'createWallet',
-      password
+  public registerSessionLink(walletSessionId: string, platformSessionId: string): void {
+    this.sessions.set(walletSessionId, {
+      expiry: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
+      linkedTo: platformSessionId
     });
   }
 
-  private async sendMessage(message: any): Promise<any> {
-    if (!this.port) throw new Error('Not connected to extension');
+  public validateSession(sessionId: string): boolean {
+    const session = this.sessions.get(sessionId);
+    return session !== undefined && session.expiry > Date.now();
+  }
 
-    return new Promise((resolve, reject) => {
-      const messageId = Date.now().toString();
-      const timeout = setTimeout(() => {
-        reject(new Error('Message timeout'));
-      }, 30000);
+  public refreshSession(sessionId: string, newExpiry: number): void {
+    const session = this.sessions.get(sessionId);
+    if (session) {
+      session.expiry = newExpiry;
+      this.sessions.set(sessionId, session);
+    }
+  }
 
-      const listener = (response: any) => {
-        if (response.messageId === messageId) {
-          clearTimeout(timeout);
-          this.port?.onMessage.removeListener(listener);
-          if (response.error) {
-            reject(new Error(response.error));
-          } else {
-            resolve(response);
-          }
-        }
-      };
-
-      this.port.onMessage.addListener(listener);
-      this.port.postMessage({ ...message, messageId });
-    });
+  public terminateSession(sessionId: string): void {
+    this.sessions.delete(sessionId);
   }
 } 

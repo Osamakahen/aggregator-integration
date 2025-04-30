@@ -12,11 +12,14 @@ export class PriceService {
 
   async getPrice(tokenIn: Token, tokenOut: Token, amountIn: string): Promise<string> {
     try {
-      // TODO: Implement actual price fetching from aggregator
-      // For now, return a mock price
-      const amountInWei = ethers.parseUnits(amountIn, tokenIn.decimals);
-      const mockPrice = '1.0'; // 1:1 price ratio
-      return mockPrice;
+      // TODO: Implement price discovery using:
+      // 1. On-chain price oracle (e.g., Chainlink)
+      // 2. DEX price aggregator API
+      // 3. Or implement price calculation based on reserves
+      
+      // For now, return a mock price with some variation
+      const mockPrice = Math.random() * (1.1 - 0.9) + 0.9; // Random price between 0.9 and 1.1
+      return mockPrice.toString();
     } catch (error) {
       console.error('Error fetching price:', error);
       return '0';
@@ -24,9 +27,15 @@ export class PriceService {
   }
 
   async calculateAmountOut(tokenIn: Token, tokenOut: Token, amountIn: string): Promise<string> {
-    const price = await this.getPrice(tokenIn, tokenOut, amountIn);
-    const amountInWei = ethers.parseUnits(amountIn, tokenIn.decimals);
-    const amountOutWei = amountInWei * ethers.parseUnits(price, tokenOut.decimals);
-    return ethers.formatUnits(amountOutWei, tokenOut.decimals);
+    try {
+      const price = await this.getPrice(tokenIn, tokenOut, amountIn);
+      const amountInWei = ethers.parseUnits(amountIn, tokenIn.decimals);
+      const priceInWei = ethers.parseUnits(price, tokenOut.decimals);
+      const amountOutWei = (amountInWei * priceInWei) / ethers.parseUnits('1', tokenIn.decimals);
+      return ethers.formatUnits(amountOutWei, tokenOut.decimals);
+    } catch (error) {
+      console.error('Error calculating amount out:', error);
+      return '0';
+    }
   }
 } 

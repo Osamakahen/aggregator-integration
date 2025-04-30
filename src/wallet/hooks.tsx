@@ -1,29 +1,28 @@
-import { useState, useEffect, createContext, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { WalletBridge } from './bridge';
 import { WalletBridgeConfig } from './types';
 
-const WalletContext = createContext<{
+interface WalletContextType {
   bridge: WalletBridge | null;
   isConnected: boolean;
   accounts: string[];
   chainId: string;
   connect: () => Promise<boolean>;
   disconnect: () => Promise<void>;
-}>({
-  bridge: null,
-  isConnected: false,
-  accounts: [],
-  chainId: '',
-  connect: async () => false,
-  disconnect: async () => {},
-});
+}
 
-export function WalletProvider({ children }: { children: React.ReactNode }) {
+const WalletContext = createContext<WalletContextType | null>(null);
+
+interface WalletProviderProps {
+  children: ReactNode;
+}
+
+export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
   const [bridge, setBridge] = useState<WalletBridge | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [accounts, setAccounts] = useState<string[]>([]);
   const [chainId, setChainId] = useState('');
-  
+
   useEffect(() => {
     const initBridge = async () => {
       const config: WalletBridgeConfig = {
@@ -36,10 +35,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       };
       
       const walletBridge = new WalletBridge(config);
-      await walletBridge.initialize();
+      await walletBridge.connect();
       setBridge(walletBridge);
       
-      // Set up event listeners
       walletBridge.on('accountsChanged', setAccounts);
       walletBridge.on('chainChanged', setChainId);
       walletBridge.on('connect', () => setIsConnected(true));
@@ -49,22 +47,20 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     initBridge();
     
     return () => {
-      // Clean up event listeners when component unmounts
       bridge?.removeAllListeners();
     };
-  }, []);
-  
+  }, [bridge]);
+
   const connect = async () => {
     if (!bridge) return false;
     try {
-      const result = await bridge.connect();
-      return result;
+      return await bridge.connect();
     } catch (error) {
       console.error('Connection failed:', error);
       return false;
     }
   };
-  
+
   const disconnect = async () => {
     if (!bridge) return;
     try {
@@ -73,14 +69,27 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       console.error('Disconnection failed:', error);
     }
   };
-  
+
+  const value = React.useMemo(() => ({
+    bridge,
+    isConnected,
+    accounts,
+    chainId,
+    connect,
+    disconnect
+  }), [bridge, isConnected, accounts, chainId]);
+
   return (
-    <WalletContext.Provider
-      value={{ bridge, isConnected, accounts, chainId, connect, disconnect }}
-    >
+    <WalletContext.Provider value={value}>
       {children}
     </WalletContext.Provider>
   );
-}
+};
 
-export const useWallet = () => useContext(WalletContext); 
+export const useWallet = () => {
+  const context = useContext(WalletContext);
+  if (!context) {
+    throw new Error('useWallet must be used within a WalletProvider');
+  }
+  return context;
+}; 

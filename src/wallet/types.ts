@@ -11,6 +11,7 @@ export interface Account {
   name: string;
   index: number;
   balances: Record<string, string>;
+  balance?: string;
 }
 
 export interface ConnectedSite {
@@ -71,9 +72,31 @@ export interface WalletError extends Error {
 
 export interface WalletBridgeConfig {
   platformOrigin: string;
+  autoConnect?: boolean;
+  persistConnection?: boolean;
   enableHardwareAuth?: boolean;
   enableEIP4361?: boolean;
   maxRetryAttempts?: number;
   backoffMultiplier?: number;
   initialBackoffDelay?: number;
+}
+
+export interface Session {
+  expiry: number;
+  linkedTo?: string;
+}
+
+export interface UnifiedSession {
+  id: string;
+  userId: string;
+  walletAddress: string;
+  walletSessionId: string;
+  expiry: number;
+  createdAt: number;
+}
+
+export interface SessionProof {
+  signature: string;
+  timestamp: number;
+  sessionId: string;
 } 

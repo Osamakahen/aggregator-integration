@@ -95,6 +95,18 @@ export interface UnifiedSession {
   createdAt: number;
 }
 
+export interface Port {
+  postMessage: (message: any) => void;
+  onMessage: {
+    addListener: (callback: (message: any) => void) => void;
+    removeListener: (callback: (message: any) => void) => void;
+  };
+  onDisconnect: {
+    addListener: (callback: () => void) => void;
+    removeListener: (callback: () => void) => void;
+  };
+}
+
 export interface SessionProof {
   signature: string;
   timestamp: number;

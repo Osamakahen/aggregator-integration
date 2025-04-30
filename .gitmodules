@@ -1,0 +1,6 @@
+[submodule "freobus-deploy"]
+	path = freobus-deploy
+	url = https://github.com/Osamakahen/freobus-deploy.git
+[submodule "freobus-extension"]
+	path = freobus-extension
+	url = https://github.com/Osamakahen/freobus-extension.git

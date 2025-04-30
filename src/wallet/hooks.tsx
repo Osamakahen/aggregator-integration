@@ -1,15 +1,6 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { WalletBridge } from './bridge';
-import { WalletBridgeConfig } from './types';
-
-interface WalletContextType {
-  bridge: WalletBridge | null;
-  isConnected: boolean;
-  accounts: string[];
-  chainId: string;
-  connect: () => Promise<boolean>;
-  disconnect: () => Promise<void>;
-}
+import { WalletContextType, Network } from './types';
 
 const WalletContext = createContext<WalletContextType | null>(null);
 
@@ -19,29 +10,24 @@ interface WalletProviderProps {
 
 export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
   const [bridge, setBridge] = useState<WalletBridge | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
+  const [isUnlocked, setIsUnlocked] = useState(false);
   const [accounts, setAccounts] = useState<string[]>([]);
-  const [chainId, setChainId] = useState('');
+  const [networks, setNetworks] = useState<Network[]>([]);
+  const [selectedNetwork, setSelectedNetwork] = useState<Network | null>(null);
 
   useEffect(() => {
     const initBridge = async () => {
-      const config: WalletBridgeConfig = {
-        platformOrigin: window.location.origin,
-        enableHardwareAuth: false,
-        enableEIP4361: true,
-        maxRetryAttempts: 5,
-        backoffMultiplier: 1.5,
-        initialBackoffDelay: 1000
-      };
-      
-      const walletBridge = new WalletBridge(config);
-      await walletBridge.connect();
+      const walletBridge = new WalletBridge({
+        platformOrigin: window.location.origin
+      });
+      await walletBridge.initialize();
       setBridge(walletBridge);
       
       walletBridge.on('accountsChanged', setAccounts);
-      walletBridge.on('chainChanged', setChainId);
-      walletBridge.on('connect', () => setIsConnected(true));
-      walletBridge.on('disconnect', () => setIsConnected(false));
+      walletBridge.on('networksChanged', setNetworks);
+      walletBridge.on('selectedNetworkChanged', setSelectedNetwork);
+      walletBridge.on('unlock', () => setIsUnlocked(true));
+      walletBridge.on('lock', () => setIsUnlocked(false));
     };
     
     initBridge();
@@ -52,32 +38,73 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
   }, [bridge]);
 
   const connect = async () => {
-    if (!bridge) return false;
-    try {
-      return await bridge.connect();
-    } catch (error) {
-      console.error('Connection failed:', error);
-      return false;
-    }
+    if (!bridge) return;
+    await bridge.connect();
   };
 
   const disconnect = async () => {
     if (!bridge) return;
-    try {
-      await bridge.disconnect();
-    } catch (error) {
-      console.error('Disconnection failed:', error);
-    }
+    await bridge.disconnect();
+  };
+
+  const getAccounts = async () => {
+    if (!bridge) return [];
+    return bridge.getAccounts();
+  };
+
+  const requestAccounts = async () => {
+    if (!bridge) return [];
+    return bridge.requestAccounts();
+  };
+
+  const addNetwork = async (network: Network) => {
+    if (!bridge) return;
+    await bridge.addNetwork(network);
+  };
+
+  const addAccount = async (account: string) => {
+    if (!bridge) return;
+    await bridge.addAccount(account);
+  };
+
+  const selectAccount = async (account: string) => {
+    if (!bridge) return;
+    await bridge.selectAccount(account);
+  };
+
+  const selectNetwork = async (network: Network) => {
+    if (!bridge) return;
+    await bridge.selectNetwork(network);
+  };
+
+  const unlock = async () => {
+    if (!bridge) return;
+    await bridge.unlock();
+  };
+
+  const sendMessage = async (message: any) => {
+    if (!bridge) return null;
+    return bridge.sendMessage(message);
   };
 
   const value = React.useMemo(() => ({
-    bridge,
-    isConnected,
+    isUnlocked,
+    isConnected: isUnlocked,
+    chainId: selectedNetwork?.chainId || '',
     accounts,
-    chainId,
+    networks,
+    selectedNetwork,
     connect,
-    disconnect
-  }), [bridge, isConnected, accounts, chainId]);
+    disconnect,
+    getAccounts,
+    requestAccounts,
+    addNetwork,
+    addAccount,
+    selectAccount,
+    selectNetwork,
+    unlock,
+    sendMessage
+  }), [isUnlocked, accounts, networks, selectedNetwork]);
 
   return (
     <WalletContext.Provider value={value}>

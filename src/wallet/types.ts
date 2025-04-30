@@ -111,4 +111,23 @@ export interface SessionProof {
   signature: string;
   timestamp: number;
   sessionId: string;
+}
+
+export interface WalletContextType {
+  isUnlocked: boolean;
+  isConnected: boolean;
+  chainId: string;
+  accounts: string[];
+  networks: Network[];
+  selectedNetwork: Network | null;
+  connect: () => Promise<void>;
+  disconnect: () => Promise<void>;
+  getAccounts: () => Promise<string[]>;
+  requestAccounts: () => Promise<string[]>;
+  addNetwork: (network: Network) => Promise<void>;
+  addAccount: (account: string) => Promise<void>;
+  selectAccount: (account: string) => Promise<void>;
+  selectNetwork: (network: Network) => Promise<void>;
+  unlock: () => Promise<void>;
+  sendMessage: (message: any) => Promise<any>;
 } 

@@ -21,7 +21,7 @@ const config: HardhatUserConfig = {
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : []
     },
     goerli: {
-      url: process.env.GOERLI_RPC_URL || "",
+      url: process.env.GOERLI_RPC_URL || "https://goerli.infura.io/v3/",
       accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : []
     }
   },

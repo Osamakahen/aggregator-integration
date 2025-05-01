@@ -47,11 +47,11 @@ export class SessionValidator {
   private cleanupExpiredNonces(): void {
     setInterval(() => {
       const now = Date.now();
-      for (const nonce of this.usedNonces) {
+      Array.from(this.usedNonces).forEach(nonce => {
         if (now - nonce > this.nonceExpiryTime) {
           this.usedNonces.delete(nonce);
         }
-      }
+      });
     }, 60000); // Cleanup every minute
   }
 } 

@@ -234,6 +234,10 @@ export class SessionManager extends EventEmitter {
     return Array.from(this.state.connectedDApps);
   }
 
+  public getState(): SessionState {
+    return this.state;
+  }
+
   public getActiveSession(): UnifiedSession | null {
     return this.state.activeSession;
   }

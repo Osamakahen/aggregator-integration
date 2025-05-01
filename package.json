@@ -5,10 +5,12 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
     "test": "jest",
-    "lint": "eslint src/**/*.ts",
-    "format": "prettier --write \"src/**/*.ts\"",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\"",
     "prepare": "husky install",
     "start:dev": "ts-node src/index.ts",
     "test:aggregator": "ts-node scripts/test-aggregator.ts"

@@ -1,119 +1,130 @@
-# FreoBus DEX Aggregator Integration
+# FreoBus Web3 Integration Platform
 
 ## Overview
 
-FreoBus DEX Aggregator is a comprehensive solution for aggregating liquidity across multiple decentralized exchanges. This project aims to provide users with the best possible trading experience by finding optimal routes and minimizing trading costs.
+FreoBus is a comprehensive Web3 integration platform that combines a Next.js web application with a Chrome extension to provide seamless decentralized application (dApp) interactions. The platform includes a DEX aggregator, wallet management, and cross-dApp communication capabilities.
 
-## Implementation Progress
+## Project Structure
 
-### Phase 1: Core Functionality (Current: 70% → Target: 70%) ✅
-- [x] Base aggregator interface
-- [x] Uniswap V3 adapter implementation
-- [ ] CowSwap integration (Optional)
-- [x] Common adapter interfaces
+The project is organized into three main components:
 
-### Phase 2: Security Hardening (Current: 90% → Target: 90%) ✅
-- [x] Smart contract security enhancements
-- [x] Security test suite implementation
-- [x] Error recovery system
-- [x] MEV protection implementation
-- [x] Transaction validation system
+1. **Web Application** (`src/`): A Next.js application providing the main user interface
+   - Wallet management
+   - DEX aggregator interface
+   - dApp integration hub
 
-### Phase 3: Optimization & Performance (Current: 90% → Target: 90%) ✅
-- [x] Cross-aggregator route optimizer
-- [x] Gas optimization strategy
-- [x] MEV protection implementation
-- [x] Price impact validation
-- [x] Slippage protection
+2. **Chrome Extension** (`freobus-extension/`): Browser extension for secure wallet operations
+   - Secure key management
+   - Transaction signing
+   - Cross-dApp communication
 
-### Phase 4: Testing & Quality Assurance (Current: 95% → Target: 95%) ✅
-- [x] Unit test setup
-- [x] Integration test implementation
-- [x] Contract test suite
-- [x] Security test suite
-- [x] End-to-end testing framework
+3. **Deployment Package** (`freobus-deploy/`): Production-ready deployment configuration
+   - Vercel deployment setup
+   - CI/CD workflows
+   - Environment configuration
 
-### Phase 5: Documentation & Production Readiness (Current: 100% → Target: 100%) ✅
-- [x] API documentation
-- [x] Integration guide
-- [x] Security audit preparation
-- [x] Code comments and documentation
-- [x] Example implementations
+## Features
+
+### Core Functionality
+- **DEX Aggregator**
+  - Multi-DEX liquidity aggregation
+  - Optimal route finding
+  - Price impact minimization
+  - Gas optimization
+
+- **Wallet Management**
+  - Secure key storage
+  - Multi-chain support
+  - Transaction signing
+  - Account management
+
+- **Cross-dApp Communication**
+  - Secure message passing
+  - Session management
+  - State synchronization
+  - Error recovery
+
+### Security Features
+- MEV protection
+- Transaction validation
+- Price impact limits
+- Gas optimization
+- Error recovery system
 
 ## Getting Started
 
 ### Prerequisites
 - Node.js >= 14.0.0
-- Yarn or npm
+- Chrome browser (for extension development)
 - Ethereum node access (Infura, Alchemy, or local node)
 
 ### Installation
+
 ```bash
+# Clone the repository
+git clone https://github.com/Osamakahen/aggregator-integration.git
+cd aggregator-integration
+
 # Install dependencies
 npm install
 
 # Build the project
 npm run build
+```
+
+### Development
+
+```bash
+# Start the development server
+npm run dev
 
 # Run tests
 npm test
+
+# Lint code
+npm run lint
+
+# Format code
+npm run format
 ```
 
 ### Configuration
-Create a `.env` file with the following variables:
+
+Create a `.env` file in the root directory:
+
 ```env
-INFURA_API_KEY=your_infura_key
-ETHERSCAN_API_KEY=your_etherscan_key
-PRIVATE_KEY=your_private_key_for_testing
-FLASHBOTS_RPC_URL=optional_flashbots_endpoint
+NEXT_PUBLIC_INFURA_API_KEY=your_infura_key
+NEXT_PUBLIC_ETHERSCAN_API_KEY=your_etherscan_key
+NEXT_PUBLIC_FLASHBOTS_RPC_URL=optional_flashbots_endpoint
 ```
 
-## Usage Example
+## Architecture
 
-```typescript
-import { UniswapAggregator } from '@freobus/aggregator';
+### Web Application
+- Built with Next.js 14
+- TypeScript for type safety
+- Tailwind CSS for styling
+- React Context for state management
 
-// Initialize the aggregator with security config
-const uniswap = new UniswapAggregator({
-  rpcUrl: 'https://mainnet.infura.io/v3/your-api-key',
-  security: {
-    maxPriceImpact: 2, // 2%
-    maxGasPrice: '500000000000', // 500 Gwei
-    flashbotRpcUrl: 'https://relay.flashbots.net' // Optional
-  }
-});
+### Chrome Extension
+- Built with Vite
+- Secure storage using @plasmohq/storage
+- Cross-dApp messaging using @plasmohq/messaging
+- Background service worker for secure operations
 
-// Get a quote with MEV protection
-const quote = await uniswap.getQuote({
-  fromTokenAddress: '0x...',  // Token to sell
-  toTokenAddress: '0x...',    // Token to buy
-  amount: '1000000000000000000', // Amount in wei
-  userAddress: '0x...',       // User's address
-  slippage: 0.5              // 0.5% slippage tolerance
-});
+### Smart Contracts
+- Written in Solidity
+- Deployed on multiple EVM-compatible chains
+- Security audited
+- Gas optimized
 
-console.log(`Expected output: ${quote.toAmount}`);
-console.log(`Price impact: ${quote.priceImpact}%`);
-console.log(`Estimated gas: ${quote.estimatedGas}`);
-```
+## Security Considerations
 
-## Security Features
-
-### MEV Protection
-- Flashbots integration for MEV protection
-- Private transaction pools
-- Dynamic miner tip calculation
-
-### Transaction Validation
-- Price impact limits
-- Gas price limits
-- Slippage protection
-- Gas estimation validation
-
-### Error Recovery
-- Automatic retry with backoff
-- Transaction reversion handling
-- Network error recovery
+- Private keys never leave the extension
+- All transactions are validated before signing
+- MEV protection through Flashbots
+- Price impact limits to prevent sandwich attacks
+- Gas optimization to minimize costs
 
 ## Contributing
 
@@ -136,6 +147,19 @@ npm run test:coverage
 npm test -- src/aggregators/__tests__/uniswap.test.ts
 ```
 
+## Deployment
+
+The project is configured for deployment on Vercel:
+
+1. Push to main branch triggers automatic deployment
+2. Environment variables are managed through Vercel dashboard
+3. Preview deployments for pull requests
+4. Production deployments for main branch
+
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. 
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Support
+
+For support, please open an issue in the GitHub repository or contact the development team. 

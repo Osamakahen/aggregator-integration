@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import type { Network, Account, TransactionRequest, WalletState, ConnectedSite, WalletBridgeConfig, Session, UnifiedSession, SessionProof, Port } from './types';
+import type { Network, Account, TransactionRequest, WalletState, ConnectedSite, WalletBridgeConfig, Session, UnifiedSession, SessionProof } from './types';
 
 const DEFAULT_NETWORKS: Network[] = [
   {
@@ -48,7 +48,7 @@ export class WalletBridge extends EventEmitter {
     selectedNetwork: DEFAULT_NETWORKS[0],
     connectedSites: {}
   };
-  private messageHandlers: Map<string, (message: Record<string, unknown>) => Promise<Record<string, unknown>>> = new Map();
+  private messageHandlers: Map<string, (message: Record<string, unknown>) => Promise<{ success: boolean; error?: unknown }>> = new Map();
 
   constructor(config: WalletBridgeConfig) {
     super();

@@ -65,7 +65,12 @@ export class CrossDAppSessionManager extends EventEmitter {
     accounts: [],
     connectedSites: {}
   };
-  private chainId: string = '';
+  private chainId = '';
+
+  // Add static method for testing
+  public static resetInstance(): void {
+    CrossDAppSessionManager.instance = undefined as unknown as CrossDAppSessionManager;
+  }
 
   private constructor() {
     super();

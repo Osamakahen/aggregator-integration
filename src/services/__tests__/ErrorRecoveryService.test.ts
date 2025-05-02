@@ -9,7 +9,7 @@ describe('ErrorRecoveryService', () => {
     recoveryAttemptHandler = jest.fn();
     
     // Reset singleton instance
-    (ErrorRecoveryService as any).instance = null;
+    ErrorRecoveryService.resetInstance();
     service = ErrorRecoveryService.getInstance();
     service.on('recoveryAttempt', recoveryAttemptHandler);
   });

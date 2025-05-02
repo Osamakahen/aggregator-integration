@@ -7,8 +7,8 @@ describe('SessionManager', () => {
 
   beforeEach(() => {
     jest.useFakeTimers();
-    // Reset the singleton instance
-    (SessionManager as any).instance = null;
+    // Reset the singleton instance using the proper method
+    SessionManager.resetInstance();
     manager = SessionManager.getInstance({
       maxConcurrentSessions: 1 // Set max sessions to 1 for testing
     });

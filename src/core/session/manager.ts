@@ -22,6 +22,11 @@ export class SessionManager extends EventEmitter {
   private config: SessionConfig;
   private activityMonitor: NodeJS.Timeout | null = null;
 
+  // Add static method for testing
+  public static resetInstance(): void {
+    SessionManager.instance = undefined as unknown as SessionManager;
+  }
+
   private constructor(config: Partial<SessionConfig> = {}) {
     super();
     this.validator = SessionValidator.getInstance();

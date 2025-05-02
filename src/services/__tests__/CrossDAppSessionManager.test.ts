@@ -1,6 +1,12 @@
 import { CrossDAppSessionManager } from '../CrossDAppSessionManager';
 import { UnifiedSession } from '../../core/session/types';
 
+// Define types for mocking
+interface MockBroadcastChannel {
+  postMessage: jest.Mock;
+  close: jest.Mock;
+}
+
 describe('CrossDAppSessionManager', () => {
   let sessionManager: CrossDAppSessionManager;
   let mockSession: UnifiedSession;
@@ -11,13 +17,16 @@ describe('CrossDAppSessionManager', () => {
     messageHandler = jest.fn();
     
     // Reset singleton instance
-    (CrossDAppSessionManager as any).instance = null;
+    CrossDAppSessionManager.resetInstance();
     
-    // Mock BroadcastChannel
-    (window as any).BroadcastChannel = jest.fn(() => ({
+    // Mock BroadcastChannel with proper types
+    const mockBroadcastChannel = jest.fn(() => ({
       postMessage: messageHandler,
       close: jest.fn()
     }));
+    
+    // Safely cast window and assign mock
+    (window as unknown as { BroadcastChannel: typeof mockBroadcastChannel }).BroadcastChannel = mockBroadcastChannel;
 
     sessionManager = CrossDAppSessionManager.getInstance();
     mockSession = {
@@ -88,11 +97,14 @@ describe('CrossDAppSessionManager', () => {
       const errorHandler = jest.fn();
       sessionManager.on('error', errorHandler);
 
-      // Mock BroadcastChannel to throw
-      (window as any).BroadcastChannel = jest.fn(() => ({
+      // Mock BroadcastChannel to throw with proper types
+      const mockBroadcastChannelWithError = jest.fn(() => ({
         postMessage: jest.fn(() => { throw new Error('Broadcast failed'); }),
         close: jest.fn()
       }));
+      
+      // Safely cast window and assign mock
+      (window as unknown as { BroadcastChannel: typeof mockBroadcastChannelWithError }).BroadcastChannel = mockBroadcastChannelWithError;
 
       const origin = 'https://test-dapp.com';
       await sessionManager.registerDApp(origin, mockSession);

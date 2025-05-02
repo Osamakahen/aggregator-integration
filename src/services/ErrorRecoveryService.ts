@@ -27,6 +27,11 @@ export class ErrorRecoveryService extends EventEmitter {
   private recoveryStrategies: Map<string, RecoveryStrategy> = new Map();
   private isRecovering = false;
 
+  // Add static method for testing
+  public static resetInstance(): void {
+    ErrorRecoveryService.instance = undefined as unknown as ErrorRecoveryService;
+  }
+
   private constructor() {
     super();
     this.setupDefaultStrategies();
@@ -106,7 +111,7 @@ export class ErrorRecoveryService extends EventEmitter {
         }
 
         error.retryCount++;
-      } catch (_e) {
+      } catch (_error) {
         error.retryCount++;
         this.emit('recoveryAttemptFailed', { error, attempt: error.retryCount });
       }
@@ -147,7 +152,7 @@ export class ErrorRecoveryService extends EventEmitter {
       // Attempt to reconnect to network
       await new Promise(resolve => setTimeout(resolve, 1000));
       return navigator.onLine;
-    } catch {
+    } catch (_error) {
       return false;
     }
   }

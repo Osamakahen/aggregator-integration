@@ -1,5 +1,3 @@
-import { BigNumberish } from 'ethers';
-
 export interface QuoteParams {
   fromTokenAddress: string;
   toTokenAddress: string;
@@ -48,6 +46,5 @@ export interface BaseAggregator {
   
   // Adapter-specific features
   getSupportedTokens(): Promise<string[]>;
-  getName(): string;
   getFeatures(): AggregatorFeatures;
 } 

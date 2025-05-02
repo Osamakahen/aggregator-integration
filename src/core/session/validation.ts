@@ -28,7 +28,7 @@ export class SessionValidator {
     }
 
     try {
-      const signer = await utils.verifyMessage(message, proof.signature);
+      await utils.verifyMessage(message, proof.signature);
       this.usedNonces.add(proof.nonce);
       setTimeout(() => this.usedNonces.delete(proof.nonce), this.nonceExpiryTime);
       return true;

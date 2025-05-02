@@ -39,7 +39,7 @@ export class UnifiedSessionService {
     this.sessions.set(platformSessionId, session);
     
     // Link the sessions with a cryptographic proof
-    const linkingProof = await this.generateSessionLinkProof(
+    await this.generateSessionLinkProof(
       platformSessionId,
       walletSessionId,
       userId,

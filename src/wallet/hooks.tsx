@@ -1,6 +1,6 @@
-import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
+import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback } from 'react';
 import { WalletBridge } from './bridge';
-import { WalletBridgeConfig, UnifiedSession } from './types';
+import { WalletBridgeConfig, UnifiedSession, Account } from './types';
 
 interface WalletContextType {
   bridge: WalletBridge | null;
@@ -27,6 +27,28 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
   const [chainId, setChainId] = useState('');
   const [currentSession, setCurrentSession] = useState<UnifiedSession | null>(null);
 
+  const handleAccountsChanged = useCallback((newAccounts: Account[]) => {
+    setAccounts(newAccounts.map(a => a.address));
+  }, []);
+
+  const handleChainChanged = useCallback((newChainId: string) => {
+    setChainId(newChainId);
+  }, []);
+
+  const handleConnect = useCallback(() => {
+    setIsConnected(true);
+  }, []);
+
+  const handleDisconnect = useCallback(() => {
+    setIsConnected(false);
+    setCurrentSession(null);
+  }, []);
+
+  const handleAutoConnected = useCallback((session: UnifiedSession) => {
+    setIsConnected(true);
+    setCurrentSession(session);
+  }, []);
+
   useEffect(() => {
     const initBridge = async () => {
       const config: WalletBridgeConfig = {
@@ -41,17 +63,11 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       const walletBridge = new WalletBridge(config);
       setBridge(walletBridge);
       
-      walletBridge.on('accountsChanged', setAccounts);
-      walletBridge.on('chainChanged', setChainId);
-      walletBridge.on('connect', () => setIsConnected(true));
-      walletBridge.on('disconnect', () => {
-        setIsConnected(false);
-        setCurrentSession(null);
-      });
-      walletBridge.on('autoConnected', (session: UnifiedSession) => {
-        setIsConnected(true);
-        setCurrentSession(session);
-      });
+      walletBridge.on('accountsChanged', handleAccountsChanged);
+      walletBridge.on('chainChanged', handleChainChanged);
+      walletBridge.on('connect', handleConnect);
+      walletBridge.on('disconnect', handleDisconnect);
+      walletBridge.on('autoConnected', handleAutoConnected);
 
       // Try auto-connect
       const autoConnected = await walletBridge.autoConnect();
@@ -66,9 +82,9 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     return () => {
       bridge?.removeAllListeners();
     };
-  }, []);
+  }, [bridge, handleAccountsChanged, handleChainChanged, handleConnect, handleDisconnect, handleAutoConnected]);
 
-  const connect = async () => {
+  const connect = useCallback(async () => {
     if (!bridge) return false;
     try {
       const connected = await bridge.connect();
@@ -81,9 +97,9 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
       console.error('Connection failed:', error);
       return false;
     }
-  };
+  }, [bridge]);
 
-  const disconnect = async () => {
+  const disconnect = useCallback(async () => {
     if (!bridge) return;
     try {
       await bridge.disconnect();
@@ -94,22 +110,22 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('Disconnection failed:', error);
     }
-  };
+  }, [bridge, currentSession]);
 
-  const createSession = async () => {
+  const createSession = useCallback(async () => {
     if (!bridge || !isConnected) {
       throw new Error('Wallet must be connected to create a session');
     }
     const session = await bridge.createUnifiedSession(Date.now().toString());
     setCurrentSession(session);
     return session;
-  };
+  }, [bridge, isConnected]);
 
-  const terminateSession = async () => {
+  const terminateSession = useCallback(async () => {
     if (!bridge || !currentSession) return;
     await bridge.terminateSession(currentSession.id);
     setCurrentSession(null);
-  };
+  }, [bridge, currentSession]);
 
   const value = React.useMemo(() => ({
     bridge,
@@ -121,7 +137,7 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
     disconnect,
     createSession,
     terminateSession
-  }), [bridge, isConnected, accounts, chainId, currentSession]);
+  }), [bridge, isConnected, accounts, chainId, currentSession, connect, disconnect, createSession, terminateSession]);
 
   return (
     <WalletContext.Provider value={value}>

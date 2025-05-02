@@ -10,7 +10,7 @@ export class PriceService {
     this.aggregatorAddress = aggregatorAddress;
   }
 
-  async getPrice(tokenIn: Token, tokenOut: Token, amountIn: string): Promise<string> {
+  async getPrice(_tokenIn: Token, _tokenOut: Token, _amountIn: string): Promise<string> {
     try {
       // TODO: Implement price discovery using:
       // 1. On-chain price oracle (e.g., Chainlink)
@@ -26,11 +26,11 @@ export class PriceService {
     }
   }
 
-  async calculateAmountOut(tokenIn: Token, tokenOut: Token, amountIn: string): Promise<string> {
+  async calculateAmountOut(_tokenIn: Token, _tokenOut: Token, _amountIn: string): Promise<string> {
     try {
-      const price = await this.getPrice(tokenIn, tokenOut, amountIn);
-      const amountInWei = utils.parseUnits(amountIn, tokenIn.decimals);
-      const priceInWei = utils.parseUnits(price, tokenOut.decimals);
+      const price = await this.getPrice(_tokenIn, _tokenOut, _amountIn);
+      const amountInWei = utils.parseUnits(_amountIn, _tokenIn.decimals);
+      const priceInWei = utils.parseUnits(price, _tokenOut.decimals);
       return amountInWei.mul(priceInWei).toString();
     } catch (error) {
       console.error('Error calculating amount out:', error);

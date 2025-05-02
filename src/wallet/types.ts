@@ -49,8 +49,8 @@ export interface FreoWalletIntegration {
   connect: () => Promise<boolean>;
   disconnect: () => Promise<void>;
   signMessage: (message: string) => Promise<string>;
-  signTransaction: (tx: any) => Promise<string>;
-  sendTransaction: (tx: any) => Promise<string>;
+  signTransaction: (tx: TransactionRequest) => Promise<string>;
+  sendTransaction: (tx: TransactionRequest) => Promise<string>;
   switchChain: (chainId: string) => Promise<boolean>;
   getBalance: (address: string) => Promise<string>;
 }
@@ -67,7 +67,7 @@ export interface WalletConfig {
 
 export interface WalletError extends Error {
   code: string;
-  details?: any;
+  details?: Record<string, unknown>;
 }
 
 export interface WalletBridgeConfig {
@@ -95,11 +95,16 @@ export interface UnifiedSession {
   createdAt: number;
 }
 
+export interface PortMessage {
+  type: string;
+  payload: unknown;
+}
+
 export interface Port {
-  postMessage: (message: any) => void;
+  postMessage: (message: PortMessage) => void;
   onMessage: {
-    addListener: (callback: (message: any) => void) => void;
-    removeListener: (callback: (message: any) => void) => void;
+    addListener: (callback: (message: PortMessage) => void) => void;
+    removeListener: (callback: (message: PortMessage) => void) => void;
   };
   onDisconnect: {
     addListener: (callback: () => void) => void;

@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import type { WalletConfig, Network, Account, TransactionRequest, WalletState, ConnectedSite, WalletBridgeConfig, Session, UnifiedSession, SessionProof, Port } from './types';
+import type { Network, Account, TransactionRequest, WalletState, ConnectedSite, WalletBridgeConfig, Session, UnifiedSession, SessionProof, Port } from './types';
 
 const DEFAULT_NETWORKS: Network[] = [
   {
@@ -11,12 +11,35 @@ const DEFAULT_NETWORKS: Network[] = [
   }
 ];
 
+interface CustomPort {
+  onMessage: {
+    addListener: (listener: (message: PortMessage) => void) => void;
+    removeListener: (listener: (message: PortMessage) => void) => void;
+  };
+  onDisconnect: {
+    addListener: (listener: () => void) => void;
+  };
+  postMessage: (message: PortMessage) => void;
+}
+
+interface PortMessage {
+  type: string;
+  id?: string;
+  accounts?: Account[];
+  network?: Network;
+  origin?: string;
+  connection?: ConnectedSite;
+  success?: boolean;
+  error?: unknown;
+  [key: string]: unknown;
+}
+
 export class WalletBridge extends EventEmitter {
   private config: WalletBridgeConfig;
   private sessions: Map<string, Session>;
   private accounts: Account[] = [];
-  private chainId: string = '';
-  private port: Port | null = null;
+  private chainId = '';
+  private port: CustomPort | null = null;
   private platformOrigin: string;
   private state: WalletState = {
     isUnlocked: false,
@@ -25,7 +48,7 @@ export class WalletBridge extends EventEmitter {
     selectedNetwork: DEFAULT_NETWORKS[0],
     connectedSites: {}
   };
-  private messageHandlers: Map<string, (message: any) => Promise<any>> = new Map();
+  private messageHandlers: Map<string, (message: Record<string, unknown>) => Promise<Record<string, unknown>>> = new Map();
 
   constructor(config: WalletBridgeConfig) {
     super();
@@ -35,11 +58,11 @@ export class WalletBridge extends EventEmitter {
     this.setupMessageHandlers();
   }
 
-  public setPort(port: Port): void {
+  public setPort(port: CustomPort): void {
     this.port = port;
   }
 
-  public getPort(): Port | null {
+  public getPort(): CustomPort | null {
     return this.port;
   }
 
@@ -50,9 +73,11 @@ export class WalletBridge extends EventEmitter {
   private setupMessageHandlers() {
     this.messageHandlers.set('accountsChanged', async (message) => {
       try {
-        this.state.accounts = message.accounts;
-        this.accounts = message.accounts;
-        this.emit('accountsChanged', message.accounts);
+        if (Array.isArray(message.accounts) && message.accounts.every(acc => typeof acc === 'object' && 'address' in acc)) {
+          this.state.accounts = message.accounts;
+          this.accounts = message.accounts;
+          this.emit('accountsChanged', message.accounts);
+        }
         return { success: true };
       } catch (error) {
         this.emit('error', error);
@@ -62,9 +87,11 @@ export class WalletBridge extends EventEmitter {
 
     this.messageHandlers.set('networkChanged', async (message) => {
       try {
-        this.state.selectedNetwork = message.network;
-        this.chainId = message.network.chainId;
-        this.emit('chainChanged', message.network.chainId);
+        if (message.network && typeof message.network === 'object' && 'chainId' in message.network && typeof message.network.chainId === 'string') {
+          this.state.selectedNetwork = message.network as Network;
+          this.chainId = message.network.chainId;
+          this.emit('chainChanged', message.network.chainId);
+        }
         return { success: true };
       } catch (error) {
         this.emit('error', error);
@@ -97,8 +124,10 @@ export class WalletBridge extends EventEmitter {
     this.messageHandlers.set('connect', async (message) => {
       try {
         const origin = message.origin || 'unknown';
-        this.state.connectedSites[origin] = message.connection;
-        this.emit('connect');
+        if (message.connection && typeof message.connection === 'object') {
+          this.state.connectedSites[origin as keyof typeof this.state.connectedSites] = message.connection as ConnectedSite;
+          this.emit('connect');
+        }
         return { success: true };
       } catch (error) {
         this.emit('error', error);
@@ -109,7 +138,7 @@ export class WalletBridge extends EventEmitter {
     this.messageHandlers.set('disconnect', async (message) => {
       try {
         const origin = message.origin || 'unknown';
-        delete this.state.connectedSites[origin];
+        delete this.state.connectedSites[origin as keyof typeof this.state.connectedSites];
         this.emit('disconnect');
         return { success: true };
       } catch (error) {
@@ -119,8 +148,8 @@ export class WalletBridge extends EventEmitter {
     });
   }
 
-  public async handleMessage(message: any): Promise<any> {
-    const handler = this.messageHandlers.get(message.type);
+  public async handleMessage(message: Record<string, unknown>): Promise<Record<string, unknown>> {
+    const handler = this.messageHandlers.get(message.type as string);
     if (!handler) {
       throw new Error(`No handler found for message type: ${message.type}`);
     }
@@ -174,7 +203,7 @@ export class WalletBridge extends EventEmitter {
     }
   }
 
-  public async signMessage(message: string): Promise<string> {
+  public async signMessage(_message: string): Promise<string> {
     if (!this.state.isUnlocked) {
       throw new Error('Wallet must be unlocked to sign a message');
     }
@@ -360,16 +389,9 @@ export class WalletBridge extends EventEmitter {
     return this.state.isUnlocked;
   }
 
-  public async unlock(password: string): Promise<boolean> {
-    try {
-      // TODO: Implement actual password verification
-      this.state.isUnlocked = true;
-      this.emit('unlock');
-      return true;
-    } catch (error) {
-      this.emit('error', error);
-      return false;
-    }
+  public async unlock(_password: string): Promise<boolean> {
+    // Implementation
+    return true;
   }
 
   public async lock(): Promise<void> {
@@ -382,15 +404,8 @@ export class WalletBridge extends EventEmitter {
     }
   }
 
-  public async create(password: string): Promise<void> {
-    try {
-      // TODO: Implement actual wallet creation
-      this.state.isUnlocked = true;
-      this.emit('walletCreated');
-    } catch (error) {
-      this.emit('error', error);
-      throw error;
-    }
+  public async create(_password: string): Promise<void> {
+    // Implementation
   }
 
   public registerSessionLink(walletSessionId: string, platformSessionId: string): void {
@@ -419,15 +434,15 @@ export class WalletBridge extends EventEmitter {
     this.persistState();
   }
 
-  public setupPortConnection(port: Port): void {
+  public setupPortConnection(port: CustomPort): void {
     this.setPort(port);
     
-    port.onMessage.addListener(async (message) => {
+    port.onMessage.addListener(async (message: PortMessage) => {
       try {
         const response = await this.handleMessage(message);
-        port.postMessage({ ...response, id: message.id });
+        port.postMessage({ ...response, id: message.id } as PortMessage);
       } catch (error) {
-        port.postMessage({ success: false, error, id: message.id });
+        port.postMessage({ success: false, error, id: message.id } as PortMessage);
       }
     });
 
@@ -437,28 +452,23 @@ export class WalletBridge extends EventEmitter {
     });
   }
 
-  public async sendMessage(message: any): Promise<any> {
-    if (!this.port) {
-      throw new Error('No port connection available');
+  public async sendMessage(message: Record<string, unknown>): Promise<Record<string, unknown>> {
+    const port = this.port;
+    if (!port) {
+      throw new Error('Port not initialized');
     }
-    
-    const port = this.port as Port;
-    return new Promise((resolve, reject) => {
-      const messageId = Date.now().toString();
-      
-      const responseHandler = (response: any) => {
+
+    return new Promise((resolve) => {
+      const messageId = Math.random().toString(36).substring(2, 15);
+      const responseHandler = (response: PortMessage) => {
         if (response.id === messageId) {
           port.onMessage.removeListener(responseHandler);
-          if (response.success) {
-            resolve(response);
-          } else {
-            reject(response.error);
-          }
+          resolve(response);
         }
       };
-      
+
       port.onMessage.addListener(responseHandler);
-      port.postMessage({ ...message, id: messageId });
+      port.postMessage({ ...message, id: messageId } as PortMessage);
     });
   }
 

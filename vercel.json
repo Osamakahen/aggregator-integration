@@ -6,7 +6,7 @@
   "framework": "nextjs",
   "builds": [
     {
-      "src": "next.config.js",
+      "src": "package.json",
       "use": "@vercel/next"
     }
   ],
@@ -17,6 +17,7 @@
     }
   ],
   "env": {
+    "NEXT_PUBLIC_VERCEL_ENV": "production",
     "NODE_ENV": "production"
   }
 } 

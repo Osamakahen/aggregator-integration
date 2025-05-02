@@ -5,7 +5,12 @@ interface ErrorRecord {
   timestamp: number;
   type: string;
   message: string;
-  context: any;
+  context: {
+    sessionId?: string;
+    walletBridge?: {
+      connect: () => Promise<boolean>;
+    };
+  };
   retryCount: number;
 }
 
@@ -20,7 +25,7 @@ export class ErrorRecoveryService extends EventEmitter {
   private static instance: ErrorRecoveryService;
   private errors: Map<string, ErrorRecord> = new Map();
   private recoveryStrategies: Map<string, RecoveryStrategy> = new Map();
-  private isRecovering: boolean = false;
+  private isRecovering = false;
 
   private constructor() {
     super();
@@ -60,7 +65,7 @@ export class ErrorRecoveryService extends EventEmitter {
     });
   }
 
-  public async handleError(type: string, message: string, context: any = {}): Promise<boolean> {
+  public async handleError(type: string, message: string, context: Record<string, unknown> = {}): Promise<boolean> {
     const errorId = `${type}_${Date.now()}`;
     const error: ErrorRecord = {
       id: errorId,
@@ -101,7 +106,7 @@ export class ErrorRecoveryService extends EventEmitter {
         }
 
         error.retryCount++;
-      } catch (e) {
+      } catch (_e) {
         error.retryCount++;
         this.emit('recoveryAttemptFailed', { error, attempt: error.retryCount });
       }

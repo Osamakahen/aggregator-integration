@@ -8,6 +8,9 @@ const nextConfig = {
         destination: '/:path*'
       }
     ];
+  },
+  typescript: {
+    ignoreBuildErrors: false
   }
 };
 

@@ -9,7 +9,7 @@ interface CrossDAppMessage {
   type: MessageType;
   sessionId: string;
   origin: string;
-  data?: any;
+  data?: Record<string, unknown>;
   signature?: string;
   nonce?: number;
 }
@@ -53,7 +53,7 @@ export class SessionManager extends EventEmitter {
 
   private setupMessageHandlers(): void {
     this.broadcastChannel.onmessage = async (event: MessageEvent<CrossDAppMessage>) => {
-      const { type, sessionId, origin, data, signature, nonce } = event.data;
+      const { type, sessionId, origin, data } = event.data;
       
       if (!await this.validateMessage(event.data)) {
         this.emit('invalidMessage', { origin, type });
@@ -196,11 +196,11 @@ export class SessionManager extends EventEmitter {
     }
   }
 
-  private async handleSessionUpdate(sessionId: string, origin: string, data: any): Promise<void> {
+  private async handleSessionUpdate(sessionId: string, origin: string, data?: Record<string, unknown>): Promise<void> {
     if (this.state.activeSession?.id === sessionId) {
       this.state.connectedDApps.add(origin);
       this.state.lastActivity = Date.now();
-      this.emit('sessionUpdated', { sessionId, origin, data });
+      this.emit('sessionUpdated', { sessionId: sessionId, origin: origin, data: data });
     }
   }
 
@@ -217,7 +217,7 @@ export class SessionManager extends EventEmitter {
   private async handleSessionValidate(sessionId: string, origin: string): Promise<void> {
     if (this.state.activeSession?.id === sessionId) {
       this.state.lastActivity = Date.now();
-      this.emit('sessionValidated', { sessionId, origin });
+      this.emit('sessionValidated', { sessionId: sessionId, origin: origin });
     }
   }
 
@@ -225,7 +225,7 @@ export class SessionManager extends EventEmitter {
     this.broadcastChannel.postMessage(message);
   }
 
-  private async signMessage(message: string): Promise<string> {
+  private async signMessage(_message: string): Promise<string> {
     // Implement actual message signing with wallet
     return '0x...';
   }

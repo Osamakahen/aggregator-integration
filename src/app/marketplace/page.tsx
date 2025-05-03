@@ -1,15 +1,15 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import AppCard from "@/components/marketplace/AppCard";
-import CategoryGrid from "@/components/marketplace/CategoryGrid";
-import SearchBar from "@/components/marketplace/SearchBar";
+import AppCard from "../../components/marketplace/AppCard";
+import CategoryGrid from "../../components/marketplace/CategoryGrid";
+import SearchBar from "../../components/marketplace/SearchBar";
 
 const categories = [
-  { id: "defi", name: "DeFi", icon: "defi" },
-  { id: "exchange", name: "Exchange", icon: "exchange" },
-  { id: "marketplace", name: "NFTs", icon: "marketplace" },
-  { id: "social", name: "Social", icon: "social" },
+  { id: "defi", name: "DeFi", icon: "defi" as const },
+  { id: "exchange", name: "Exchange", icon: "exchange" as const },
+  { id: "marketplace", name: "NFTs", icon: "marketplace" as const },
+  { id: "social", name: "Social", icon: "social" as const },
 ];
 
 const sampleApps = [

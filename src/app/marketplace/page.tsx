@@ -1,121 +1,135 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import Image from 'next/image';
+import React, { useState, useMemo } from "react";
+import AppCard from "@/components/marketplace/AppCard";
+import CategoryGrid from "@/components/marketplace/CategoryGrid";
+import SearchBar from "@/components/marketplace/SearchBar";
 
-export default function Marketplace() {
+const categories = [
+  { id: "defi", name: "DeFi", icon: "defi" },
+  { id: "exchange", name: "Exchange", icon: "exchange" },
+  { id: "marketplace", name: "NFTs", icon: "marketplace" },
+  { id: "social", name: "Social", icon: "social" },
+];
+
+const sampleApps = [
+  {
+    id: "uniswap",
+    name: "Uniswap",
+    description: "A leading decentralized exchange for swapping ERC-20 tokens.",
+    logo: "https://cryptologos.cc/logos/uniswap-uniswap-logo.png",
+    category: "defi",
+    isVerified: true,
+    rating: 5,
+    easyConnect: true,
+    url: "https://app.uniswap.org/",
+    featured: true,
+  },
+  {
+    id: "opensea",
+    name: "OpenSea",
+    description: "The largest NFT marketplace for buying, selling, and discovering digital assets.",
+    logo: "https://opensea.io/static/images/logos/opensea.svg",
+    category: "marketplace",
+    isVerified: true,
+    rating: 5,
+    easyConnect: true,
+    url: "https://opensea.io/",
+    featured: true,
+  },
+  {
+    id: "aave",
+    name: "Aave",
+    description: "Decentralized lending and borrowing protocol.",
+    logo: "https://cryptologos.cc/logos/aave-aave-logo.png",
+    category: "defi",
+    isVerified: true,
+    rating: 4,
+    easyConnect: false,
+    url: "https://app.aave.com/",
+  },
+  {
+    id: "compound",
+    name: "Compound",
+    description: "Algorithmic, autonomous interest rate protocol.",
+    logo: "https://cryptologos.cc/logos/compound-comp-logo.png",
+    category: "defi",
+    isVerified: true,
+    rating: 4,
+    easyConnect: false,
+    url: "https://app.compound.finance/",
+  },
+  {
+    id: "sushiswap",
+    name: "SushiSwap",
+    description: "Community-driven decentralized exchange.",
+    logo: "https://cryptologos.cc/logos/sushiswap-sushi-logo.png",
+    category: "exchange",
+    isVerified: true,
+    rating: 4,
+    easyConnect: false,
+    url: "https://app.sushi.com/",
+  },
+  {
+    id: "lens",
+    name: "Lens Protocol",
+    description: "A composable and decentralized social graph.",
+    logo: "https://avatars.githubusercontent.com/u/87761809?s=200&v=4",
+    category: "social",
+    isVerified: true,
+    rating: 4,
+    easyConnect: false,
+    url: "https://www.lens.xyz/",
+  },
+  {
+    id: "farcaster",
+    name: "Farcaster",
+    description: "Decentralized social network protocol.",
+    logo: "https://pbs.twimg.com/profile_images/1635732108882223104/0QwQ6QkA_400x400.jpg",
+    category: "social",
+    isVerified: false,
+    rating: 3,
+    easyConnect: false,
+    url: "https://www.farcaster.xyz/",
+  },
+];
+
+export default function MarketplacePage() {
+  const [search, setSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  const filteredApps = useMemo(() => {
+    return sampleApps.filter((app) => {
+      const matchesCategory = selectedCategory ? app.category === selectedCategory : true;
+      const matchesSearch =
+        app.name.toLowerCase().includes(search.toLowerCase()) ||
+        app.description.toLowerCase().includes(search.toLowerCase());
+      return matchesCategory && matchesSearch;
+    });
+  }, [search, selectedCategory]);
+
   return (
-    <div className="min-h-screen bg-[#1E1E1E] text-white">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-12">
-          <h1 className="text-4xl font-bold">Web3 Shopping Mall</h1>
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search by name, category, or tag"
-                className="w-96 px-4 py-2 bg-[#2A2A2A] rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FFD700]"
-              />
-              <span className="absolute right-4 top-1/2 transform -translate-y-1/2">🔍</span>
-            </div>
-            <select className="px-4 py-2 bg-[#2A2A2A] rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#FFD700]">
-              <option>Featured</option>
-              <option>Most Popular</option>
-              <option>Newest</option>
-            </select>
-          </div>
+    <div className="min-h-screen bg-gradient-to-b from-green-400 via-green-600 to-green-800 text-white px-4 py-8">
+      <div className="max-w-5xl mx-auto">
+        <h1 className="text-3xl sm:text-4xl font-bold mb-6 text-center">Web3 Marketplace</h1>
+        <div className="mb-6">
+          <SearchBar value={search} onChange={setSearch} />
         </div>
-
-        <section className="mb-12">
-          <h2 className="text-2xl font-bold mb-6">Featured Apps</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-[#2A2A2A] p-6 rounded-lg border border-[#FFD700]">
-              <div className="flex items-start gap-4">
-                <div className="w-16 h-16 relative">
-                  <Image
-                    src="/uniswap-logo.png"
-                    alt="Uniswap"
-                    width={64}
-                    height={64}
-                    className="rounded-lg"
-                  />
-                  <span className="absolute -top-2 -right-2 bg-[#FFD700] text-black p-1 rounded-full">✓</span>
-                </div>
-                <div className="flex-1">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-xl font-semibold">Uniswap</h3>
-                      <p className="text-gray-400 text-sm">exchange • ⭐⭐⭐⭐⭐</p>
-                    </div>
-                    <button className="px-4 py-2 bg-[#FFD700] text-black rounded hover:bg-[#FFE55C] transition-colors flex items-center gap-2">
-                      <span className="text-lg">⚡</span>
-                      Easy Connect
-                    </button>
-                  </div>
-                  <p className="mt-2 text-gray-300">Swap, earn, and build on the leading decentralized crypto trading protocol.</p>
-                </div>
-              </div>
+        <div className="mb-8">
+          <CategoryGrid
+            categories={categories}
+            selectedCategory={selectedCategory}
+            onSelectCategory={setSelectedCategory}
+          />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredApps.length === 0 ? (
+            <div className="col-span-full text-center text-gray-300 py-12">
+              No dApps found.
             </div>
-
-            <div className="bg-[#2A2A2A] p-6 rounded-lg border border-[#FFD700]">
-              <div className="flex items-start gap-4">
-                <div className="w-16 h-16 relative">
-                  <Image
-                    src="/opensea-logo.png"
-                    alt="OpenSea"
-                    width={64}
-                    height={64}
-                    className="rounded-lg"
-                  />
-                  <span className="absolute -top-2 -right-2 bg-[#FFD700] text-black p-1 rounded-full">✓</span>
-                </div>
-                <div className="flex-1">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-xl font-semibold">OpenSea</h3>
-                      <p className="text-gray-400 text-sm">marketplace • ⭐⭐⭐⭐⭐</p>
-                    </div>
-                    <button className="px-4 py-2 bg-[#FFD700] text-black rounded hover:bg-[#FFE55C] transition-colors flex items-center gap-2">
-                      <span className="text-lg">⚡</span>
-                      Easy Connect
-                    </button>
-                  </div>
-                  <p className="mt-2 text-gray-300">Discover, collect, and sell extraordinary NFTs on the world's first & largest NFT marketplace.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <div className="grid grid-cols-3 md:grid-cols-7 gap-4">
-          <div className="bg-[#FFD700] text-black p-4 rounded-lg text-center cursor-pointer hover:bg-[#FFE55C] transition-colors">
-            <span className="text-2xl">🌐</span>
-            <p className="mt-2 font-medium">All Apps</p>
-          </div>
-          <div className="bg-[#2A2A2A] p-4 rounded-lg text-center cursor-pointer hover:bg-[#333333] transition-colors">
-            <span className="text-2xl">🎮</span>
-            <p className="mt-2">Games</p>
-          </div>
-          <div className="bg-[#2A2A2A] p-4 rounded-lg text-center cursor-pointer hover:bg-[#333333] transition-colors">
-            <span className="text-2xl">💰</span>
-            <p className="mt-2">DeFi</p>
-          </div>
-          <div className="bg-[#2A2A2A] p-4 rounded-lg text-center cursor-pointer hover:bg-[#333333] transition-colors">
-            <span className="text-2xl">🔄</span>
-            <p className="mt-2">Exchange</p>
-          </div>
-          <div className="bg-[#2A2A2A] p-4 rounded-lg text-center cursor-pointer hover:bg-[#333333] transition-colors">
-            <span className="text-2xl">📈</span>
-            <p className="mt-2">Trading</p>
-          </div>
-          <div className="bg-[#2A2A2A] p-4 rounded-lg text-center cursor-pointer hover:bg-[#333333] transition-colors">
-            <span className="text-2xl">🛍️</span>
-            <p className="mt-2">Marketplace</p>
-          </div>
-          <div className="bg-[#2A2A2A] p-4 rounded-lg text-center cursor-pointer hover:bg-[#333333] transition-colors">
-            <span className="text-2xl">👥</span>
-            <p className="mt-2">Social</p>
-          </div>
+          ) : (
+            filteredApps.map((app) => <AppCard key={app.id} app={app} />)
+          )}
         </div>
       </div>
     </div>

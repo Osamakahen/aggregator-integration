@@ -2,8 +2,17 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { useState } from 'react';
+import FreoWalletOnboardingModal from '../components/FreoWalletOnboardingModal';
 
 export default function Home() {
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
+
+  const handleGetWallet = () => {
+    window.open('https://chrome.google.com/webstore/detail/freobus-wallet', '_blank');
+    setOnboardingOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-400 via-green-600 to-green-800 text-white">
       {/* Navbar */}
@@ -70,15 +79,16 @@ export default function Home() {
             >
               Web3 Shopping Mall
             </Link>
-            <Link
-              href="/wallet"
+            <button
               className="px-6 sm:px-8 py-3 sm:py-4 bg-[#FFD700] text-black rounded-lg hover:bg-[#FFE55C] transition-all hover:scale-105 font-semibold text-lg"
+              onClick={handleGetWallet}
             >
               Get Your FreoWallet
-            </Link>
+            </button>
           </motion.div>
         </motion.div>
       </div>
+      <FreoWalletOnboardingModal open={onboardingOpen} onClose={() => setOnboardingOpen(false)} />
     </div>
   );
 }

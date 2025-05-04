@@ -4,7 +4,8 @@ import React, { useState, useMemo } from "react";
 import AppCard from "../../components/marketplace/AppCard";
 import CategoryGrid from "../../components/marketplace/CategoryGrid";
 import SearchBar from "../../components/marketplace/SearchBar";
-import { useWallet } from "@/context/WalletContext";
+import { useWallet } from "../context/WalletContext";
+import FreoWalletOnboardingModal from "../../components/FreoWalletOnboardingModal";
 
 const categories = [
   { id: "defi", name: "DeFi", icon: "defi" as const },
@@ -99,6 +100,12 @@ export default function MarketplacePage() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { isConnected, connectWallet } = useWallet();
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
+
+  const handleGetWallet = () => {
+    window.open('https://chrome.google.com/webstore/detail/freobus-wallet', '_blank');
+    setOnboardingOpen(true);
+  };
 
   const filteredApps = useMemo(() => {
     return sampleApps.filter((app) => {
@@ -113,7 +120,15 @@ export default function MarketplacePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-400 via-green-600 to-green-800 text-white px-4 py-8">
       <div className="max-w-5xl mx-auto">
-        <h1 className="text-3xl sm:text-4xl font-bold mb-6 text-center">Web3 Marketplace</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl sm:text-4xl font-bold text-center">Web3 Marketplace</h1>
+          <button
+            className="px-4 py-2 bg-[#FFD700] text-black rounded hover:bg-[#FFE55C] transition-all font-semibold ml-4"
+            onClick={handleGetWallet}
+          >
+            Get Your FreoWallet
+          </button>
+        </div>
         <div className="mb-6">
           <SearchBar value={search} onChange={setSearch} />
         </div>
@@ -136,6 +151,7 @@ export default function MarketplacePage() {
           )}
         </div>
       </div>
+      <FreoWalletOnboardingModal open={onboardingOpen} onClose={() => setOnboardingOpen(false)} />
     </div>
   );
 } 

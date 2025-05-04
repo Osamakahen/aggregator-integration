@@ -4,6 +4,7 @@ import React, { useState, useMemo } from "react";
 import AppCard from "../../components/marketplace/AppCard";
 import CategoryGrid from "../../components/marketplace/CategoryGrid";
 import SearchBar from "../../components/marketplace/SearchBar";
+import { useWallet } from "../../context/WalletContext";
 
 const categories = [
   { id: "defi", name: "DeFi", icon: "defi" as const },
@@ -97,6 +98,7 @@ const sampleApps = [
 export default function MarketplacePage() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const { isConnected, connectWallet } = useWallet();
 
   const filteredApps = useMemo(() => {
     return sampleApps.filter((app) => {
@@ -128,7 +130,9 @@ export default function MarketplacePage() {
               No dApps found.
             </div>
           ) : (
-            filteredApps.map((app) => <AppCard key={app.id} app={app} />)
+            filteredApps.map((app) => (
+              <AppCard key={app.id} app={app} isConnected={isConnected} connectWallet={connectWallet} />
+            ))
           )}
         </div>
       </div>

@@ -18,13 +18,27 @@ interface AppCardProps {
     featured?: boolean;
   };
   featured?: boolean;
+  isConnected: boolean;
+  connectWallet: () => Promise<void>;
 }
 
-export default function AppCard({ app, featured }: AppCardProps) {
+export default function AppCard({ app, featured, isConnected, connectWallet }: AppCardProps) {
+  const handleCardClick = async (e: React.MouseEvent, href?: string, external?: boolean) => {
+    if (!isConnected) {
+      e.preventDefault();
+      alert('Connect your FreoWallet to continue.');
+      await connectWallet();
+      return;
+    }
+    if (external && href) {
+      window.open(href, '_blank');
+    }
+  };
+
   // Use in-app navigation for Uniswap and OpenSea
   if (app.id === 'uniswap') {
     return (
-      <Link href="/dapps/uniswap" className="block">
+      <Link href="/dapps/uniswap" className="block" onClick={handleCardClick}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -90,7 +104,7 @@ export default function AppCard({ app, featured }: AppCardProps) {
   }
   if (app.id === 'opensea') {
     return (
-      <Link href="/dapps/opensea" className="block">
+      <Link href="/dapps/opensea" className="block" onClick={handleCardClick}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -161,6 +175,7 @@ export default function AppCard({ app, featured }: AppCardProps) {
       target="_blank"
       rel="noopener noreferrer"
       className="block"
+      onClick={(e) => handleCardClick(e, app.url, true)}
     >
     <motion.div
       initial={{ opacity: 0, y: 20 }}

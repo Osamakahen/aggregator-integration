@@ -4,7 +4,7 @@ import React, { useState, useMemo } from "react";
 import AppCard from "../../components/marketplace/AppCard";
 import CategoryGrid from "../../components/marketplace/CategoryGrid";
 import SearchBar from "../../components/marketplace/SearchBar";
-import { useWallet } from "../../context/WalletContext";
+import { useWallet } from "@/context/WalletContext";
 
 const categories = [
   { id: "defi", name: "DeFi", icon: "defi" as const },

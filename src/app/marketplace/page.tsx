@@ -103,8 +103,17 @@ export default function MarketplacePage() {
   const [onboardingOpen, setOnboardingOpen] = useState(false);
 
   const handleGetWallet = () => {
-    window.open('https://chrome.google.com/webstore/detail/freobus-wallet', '_blank');
-    setOnboardingOpen(true);
+    // Check if we're in development mode
+    if (process.env.NODE_ENV === 'development') {
+      // Mock wallet connection for testing
+      console.log('Mock wallet connection for testing');
+      connectWallet(); // This will simulate connecting the wallet
+      setOnboardingOpen(true);
+    } else {
+      // Production behavior - redirect to Chrome Web Store
+      window.open('https://chrome.google.com/webstore/detail/freobus-wallet', '_blank');
+      setOnboardingOpen(true);
+    }
   };
 
   const filteredApps = useMemo(() => {

@@ -99,15 +99,17 @@ const sampleApps = [
 export default function MarketplacePage() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const { isConnected, connectWallet } = useWallet();
+  const { isConnected, connectWallet, disconnectWallet } = useWallet();
   const [onboardingOpen, setOnboardingOpen] = useState(false);
 
   const handleGetWallet = () => {
-    // Check if we're in development mode
-    if (process.env.NODE_ENV === 'development') {
-      // Mock wallet connection for testing
+    // Check if we're in development or preview environment
+    const isDevOrPreview = process.env.NODE_ENV === 'development' || 
+                          process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview';
+    
+    if (isDevOrPreview) {
       console.log('Mock wallet connection for testing');
-      connectWallet(); // This will simulate connecting the wallet
+      connectWallet();
       setOnboardingOpen(true);
     } else {
       // Production behavior - redirect to Chrome Web Store
@@ -137,6 +139,14 @@ export default function MarketplacePage() {
           >
             Get Your FreoWallet
           </button>
+          {isConnected && (
+            <button
+              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-all font-semibold ml-4"
+              onClick={disconnectWallet}
+            >
+              Disconnect Wallet
+            </button>
+          )}
         </div>
         <div className="mb-6">
           <SearchBar value={search} onChange={setSearch} />

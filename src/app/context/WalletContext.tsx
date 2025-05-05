@@ -21,19 +21,28 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [account, setAccount] = useState<string | null>(null);
 
   const connectWallet = async (): Promise<void> => {
-    if (process.env.NODE_ENV === 'development') {
+    // Check if we're in development or preview environment
+    const isDevOrPreview = process.env.NODE_ENV === 'development' || 
+                          process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview';
+    
+    if (isDevOrPreview) {
+      console.log('Starting mock wallet connection...');
       await new Promise(resolve => setTimeout(resolve, 500));
       setIsConnected(true);
       setAccount('0x1234567890abcdef1234567890abcdef12345678');
-      console.log('Mock wallet connected');
+      console.log('Mock wallet connected successfully');
+      console.log('Account:', '0x1234567890abcdef1234567890abcdef12345678');
     } else {
       console.log('Connecting to actual wallet...');
+      // Production behavior will be implemented when the wallet is available
     }
   };
 
   const disconnectWallet = () => {
+    console.log('Disconnecting wallet...');
     setIsConnected(false);
     setAccount(null);
+    console.log('Wallet disconnected');
   };
 
   return (

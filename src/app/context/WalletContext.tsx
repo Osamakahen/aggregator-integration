@@ -21,9 +21,15 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [account, setAccount] = useState<string | null>(null);
 
   const connectWallet = async (): Promise<void> => {
+    // Debug environment variables
+    console.log('NODE_ENV:', process.env.NODE_ENV);
+    console.log('VERCEL_ENV:', process.env.NEXT_PUBLIC_VERCEL_ENV);
+    
     // Check if we're in development or preview environment
     const isDevOrPreview = process.env.NODE_ENV === 'development' || 
                           process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview';
+    
+    console.log('isDevOrPreview:', isDevOrPreview);
     
     if (isDevOrPreview) {
       console.log('Starting mock wallet connection...');

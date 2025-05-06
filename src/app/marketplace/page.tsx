@@ -104,40 +104,19 @@ export default function MarketplacePage() {
   const [providerStatus, setProviderStatus] = useState<string>("Checking...");
 
   useEffect(() => {
-    // Test provider functionality
-    const testProvider = async () => {
-      try {
-        if (typeof window.ethereum !== 'undefined') {
-          console.log('Provider found:', window.ethereum);
-          setProviderStatus('Provider detected');
-          
-          // Test basic provider functionality
-          const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-          console.log('Chain ID:', chainId);
-          
-          // Test event handling
-          window.ethereum.on('accountsChanged', (...args: unknown[]) => {
-            const accounts = args[0] as string[];
-            console.log('Accounts changed:', accounts);
-          });
-          
-          window.ethereum.on('chainChanged', (...args: unknown[]) => {
-            const chainId = args[0] as string;
-            console.log('Chain changed:', chainId);
-          });
-          
-          setProviderStatus('Provider working correctly');
-        } else {
-          console.log('No provider found');
-          setProviderStatus('No provider detected');
-        }
-      } catch (error) {
-        console.error('Provider test failed:', error);
-        setProviderStatus('Provider test failed: ' + (error as Error).message);
+    let tries = 0;
+    const maxTries = 50; // 5 seconds if interval is 100ms
+    const interval = setInterval(() => {
+      if (window.ethereum) {
+        setProviderStatus('Provider detected');
+        clearInterval(interval);
+        // Optionally, run your provider test logic here
+      } else if (++tries > maxTries) {
+        setProviderStatus('No provider detected');
+        clearInterval(interval);
       }
-    };
-
-    testProvider();
+    }, 100);
+    return () => clearInterval(interval);
   }, []);
 
   const handleGetWallet = () => {

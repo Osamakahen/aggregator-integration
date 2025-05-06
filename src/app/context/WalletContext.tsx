@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface WalletContextType {
   isConnected: boolean;
@@ -19,6 +19,16 @@ const WalletContext = createContext<WalletContextType>({
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [account, setAccount] = useState<string | null>(null);
+
+  useEffect(() => {
+    function handleWalletConnected(event: MessageEvent) {
+      if (event.data?.type === "FREOBUS_WALLET_CONNECTED") {
+        setIsConnected(true);
+      }
+    }
+    window.addEventListener("message", handleWalletConnected);
+    return () => window.removeEventListener("message", handleWalletConnected);
+  }, []);
 
   const connectWallet = async (): Promise<void> => {
     if (typeof window !== 'undefined' && window.ethereum) {

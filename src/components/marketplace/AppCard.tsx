@@ -20,9 +20,10 @@ interface AppCardProps {
   featured?: boolean;
   isConnected: boolean;
   connectWallet: () => Promise<void>;
+  connectionStatus: 'idle' | 'connecting' | 'connected' | 'error';
 }
 
-export default function AppCard({ app, featured, isConnected, connectWallet }: AppCardProps) {
+export default function AppCard({ app, featured, isConnected, connectWallet, connectionStatus }: AppCardProps) {
   const handleCardClick = async (e: React.MouseEvent, href?: string, external?: boolean) => {
     if (!isConnected) {
       e.preventDefault();

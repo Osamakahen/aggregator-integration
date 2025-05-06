@@ -3,89 +3,73 @@ import React, { useState } from 'react';
 interface FreoWalletOnboardingModalProps {
   open: boolean;
   onClose: () => void;
+  isConnected: boolean;
+  connectionStatus: 'idle' | 'connecting' | 'connected' | 'error';
 }
 
 const CHROME_WEBSTORE_URL =
   'https://chrome.google.com/webstore/detail/freobus-wallet';
 
-export default function FreoWalletOnboardingModal({ open, onClose }: FreoWalletOnboardingModalProps) {
-  const [step, setStep] = useState(1);
-  const [extensionDetected, setExtensionDetected] = useState(false);
-  const [checking, setChecking] = useState(false);
-
+const FreoWalletOnboardingModal: React.FC<FreoWalletOnboardingModalProps> = ({
+  open,
+  onClose,
+  isConnected,
+  connectionStatus
+}) => {
   if (!open) return null;
 
-  const handleContinue = async () => {
-    setChecking(true);
-    // Simulate extension detection
-    setTimeout(() => {
-      const detected = typeof window !== 'undefined' && (window as any).ethereum && (window as any).ethereum.isFreoWallet;
-      setExtensionDetected(!!detected);
-      setStep(2);
-      setChecking(false);
-    }, 1000);
-  };
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
-      <div className="bg-white text-black rounded-lg shadow-lg p-8 max-w-md w-full relative">
-        <button
-          className="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
-          onClick={onClose}
-        >
-          ×
-        </button>
-        <h2 className="text-2xl font-bold mb-4">Get Your FreoWallet</h2>
-        {step === 1 && (
-          <>
-            <ol className="list-decimal pl-5 mb-4 space-y-2">
-              <li>
-                <a
-                  href={CHROME_WEBSTORE_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 underline"
-                >
-                  Install the FreoWallet browser extension
-                </a>
-              </li>
-              <li>After installation, click Continue below.</li>
-            </ol>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-gray-900 rounded-lg p-8 max-w-md w-full mx-4">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-white">Welcome to FreoWallet</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        {connectionStatus === 'connecting' ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+            <p className="text-white">Connecting to FreoWallet...</p>
+          </div>
+        ) : isConnected ? (
+          <div className="text-center py-8">
+            <div className="text-green-400 text-5xl mb-4">✓</div>
+            <p className="text-white text-xl mb-4">Successfully Connected!</p>
+            <p className="text-gray-400 mb-6">You can now interact with dApps using your FreoWallet.</p>
             <button
-              className="w-full py-2 bg-[#FFD700] text-black rounded font-semibold hover:bg-[#FFE55C] transition-colors"
-              onClick={handleContinue}
-              disabled={checking}
-            >
-              {checking ? 'Checking...' : 'Continue'}
-            </button>
-          </>
-        )}
-        {step === 2 && !extensionDetected && (
-          <>
-            <p className="mb-4 text-red-600">FreoWallet extension not detected. Please install it and try again.</p>
-            <button
-              className="w-full py-2 bg-gray-300 text-black rounded font-semibold hover:bg-gray-400 transition-colors"
-              onClick={() => setStep(1)}
-            >
-              Back
-            </button>
-          </>
-        )}
-        {step === 2 && extensionDetected && (
-          <>
-            <ol className="list-decimal pl-5 mb-4 space-y-2">
-              <li>Open the FreoWallet extension and create your wallet (set username and password).</li>
-              <li>Once your wallet is created, click Connect Wallet in the app navigation.</li>
-            </ol>
-            <button
-              className="w-full py-2 bg-green-600 text-white rounded font-semibold hover:bg-green-700 transition-colors"
               onClick={onClose}
+              className="bg-[#FFD700] text-black px-6 py-2 rounded font-semibold hover:bg-[#FFE55C] transition-colors"
             >
-              Done
+              Continue
             </button>
-          </>
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <div className="text-yellow-400 text-5xl mb-4">!</div>
+            <p className="text-white text-xl mb-4">Install FreoWallet</p>
+            <p className="text-gray-400 mb-6">
+              To use this dApp, you need to install the FreoWallet browser extension.
+            </p>
+            <a
+              href="https://chrome.google.com/webstore/detail/freobus-wallet"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-[#FFD700] text-black px-6 py-2 rounded font-semibold hover:bg-[#FFE55C] transition-colors inline-block"
+            >
+              Install Extension
+            </a>
+          </div>
         )}
       </div>
     </div>
   );
-} 
+};
+
+export default FreoWalletOnboardingModal; 

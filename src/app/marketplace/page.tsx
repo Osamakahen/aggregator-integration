@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import AppCard from "../../components/marketplace/AppCard";
 import CategoryGrid from "../../components/marketplace/CategoryGrid";
 import SearchBar from "../../components/marketplace/SearchBar";
@@ -99,12 +99,67 @@ const sampleApps = [
 export default function MarketplacePage() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const { isConnected, connectWallet } = useWallet();
+  const { isConnected, connectWallet, disconnectWallet } = useWallet();
   const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const [providerStatus, setProviderStatus] = useState<string>("Checking...");
+
+  useEffect(() => {
+    // Test provider functionality
+    const testProvider = async () => {
+      try {
+        if (typeof window.ethereum !== 'undefined') {
+          console.log('Provider found:', window.ethereum);
+          setProviderStatus('Provider detected');
+          
+          // Test basic provider functionality
+          const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+          console.log('Chain ID:', chainId);
+          
+          // Test event handling
+          window.ethereum.on('accountsChanged', (...args: unknown[]) => {
+            const accounts = args[0] as string[];
+            console.log('Accounts changed:', accounts);
+          });
+          
+          window.ethereum.on('chainChanged', (...args: unknown[]) => {
+            const chainId = args[0] as string;
+            console.log('Chain changed:', chainId);
+          });
+          
+          setProviderStatus('Provider working correctly');
+        } else {
+          console.log('No provider found');
+          setProviderStatus('No provider detected');
+        }
+      } catch (error) {
+        console.error('Provider test failed:', error);
+        setProviderStatus('Provider test failed: ' + (error as Error).message);
+      }
+    };
+
+    testProvider();
+  }, []);
 
   const handleGetWallet = () => {
-    window.open('https://chrome.google.com/webstore/detail/freobus-wallet', '_blank');
-    setOnboardingOpen(true);
+    // Debug environment variables
+    console.log('NODE_ENV:', process.env.NODE_ENV);
+    console.log('VERCEL_ENV:', process.env.NEXT_PUBLIC_VERCEL_ENV);
+    
+    // Check if we're in development or preview environment
+    const isDevOrPreview = process.env.NODE_ENV === 'development' || 
+                          process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview';
+    
+    console.log('isDevOrPreview:', isDevOrPreview);
+    
+    if (isDevOrPreview) {
+      console.log('Mock wallet connection for testing');
+      connectWallet();
+      setOnboardingOpen(true);
+    } else {
+      // Production behavior - redirect to Chrome Web Store
+      window.open('https://chrome.google.com/webstore/detail/freobus-wallet', '_blank');
+      setOnboardingOpen(true);
+    }
   };
 
   const filteredApps = useMemo(() => {
@@ -122,12 +177,25 @@ export default function MarketplacePage() {
       <div className="max-w-5xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl sm:text-4xl font-bold text-center">Web3 Marketplace</h1>
-          <button
-            className="px-4 py-2 bg-[#FFD700] text-black rounded hover:bg-[#FFE55C] transition-all font-semibold ml-4"
-            onClick={handleGetWallet}
-          >
-            Get Your FreoWallet
-          </button>
+          <div className="flex items-center gap-4">
+            <span className="text-sm bg-gray-800 px-3 py-1 rounded">
+              Provider Status: {providerStatus}
+            </span>
+            <button
+              className="px-4 py-2 bg-[#FFD700] text-black rounded hover:bg-[#FFE55C] transition-all font-semibold"
+              onClick={handleGetWallet}
+            >
+              Get Your FreoWallet
+            </button>
+            {isConnected && (
+              <button
+                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-all font-semibold"
+                onClick={disconnectWallet}
+              >
+                Disconnect Wallet
+              </button>
+            )}
+          </div>
         </div>
         <div className="mb-6">
           <SearchBar value={search} onChange={setSearch} />

@@ -32,7 +32,7 @@ export default function UniswapPage() {
   useEffect(() => {
     const fetchPools = async () => {
       try {
-        const response = await fetch('https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3', {
+        const response = await fetch('/api/thegraph', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

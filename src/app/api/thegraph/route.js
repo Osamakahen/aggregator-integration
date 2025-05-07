@@ -1,10 +1,3 @@
-// /api/thegraph.js
-export const config = {
-  api: {
-    bodyParser: true,
-  },
-};
-
 export async function POST(request) {
   const body = await request.json();
 

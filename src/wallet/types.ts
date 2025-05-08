@@ -30,16 +30,59 @@ export interface WalletState {
 }
 
 export interface TransactionRequest {
-  to?: string;
   from: string;
-  nonce?: number;
+  to: string;
+  value?: string;
   data?: string;
-  value?: string | number;
-  gasLimit?: string | number;
-  gasPrice?: string | number;
-  maxFeePerGas?: string | number;
-  maxPriorityFeePerGas?: string | number;
+  gas?: string;
+  gasPrice?: string;
+  nonce?: number;
+  chainId?: string;
+}
+
+export interface TransactionResponse {
+  hash: string;
+  from: string;
+  to: string;
+  value: string;
+  data: string;
+  gas: string;
+  gasPrice: string;
+  nonce: number;
   chainId: string;
+}
+
+export interface TransactionReceipt {
+  hash: string;
+  blockNumber: number;
+  blockHash: string;
+  transactionIndex: number;
+  from: string;
+  to: string;
+  contractAddress?: string;
+  cumulativeGasUsed: string;
+  gasUsed: string;
+  effectiveGasPrice: string;
+  status: boolean;
+  logs: TransactionLog[];
+}
+
+export interface TransactionLog {
+  address: string;
+  topics: string[];
+  data: string;
+  blockNumber: number;
+  transactionHash: string;
+  logIndex: number;
+  blockHash: string;
+}
+
+export interface TransactionStatus {
+  hash: string;
+  status: 'pending' | 'confirmed' | 'failed';
+  blockNumber?: number;
+  confirmations?: number;
+  error?: string;
 }
 
 export interface FreoWalletIntegration {
@@ -116,4 +159,61 @@ export interface SessionProof {
   signature: string;
   timestamp: number;
   sessionId: string;
+}
+
+export interface CrossDAppSession {
+  id: string;
+  origin: string;
+  accounts: Account[];
+  chainId: string;
+  permissions: DAppPermissions;
+  createdAt: number;
+  expiresAt: number;
+  metadata: Record<string, any>;
+}
+
+export interface DAppPermissions {
+  canSignTransactions: boolean;
+  canReadAccounts: boolean;
+  canSwitchNetworks: boolean;
+  allowedMethods: string[];
+  allowedNetworks: string[];
+}
+
+export interface SessionShareRequest {
+  targetOrigin: string;
+  sessionId: string;
+  permissions: Partial<DAppPermissions>;
+}
+
+export interface SessionShareResponse {
+  success: boolean;
+  sessionId?: string;
+  error?: string;
+}
+
+export interface DAppAdapter {
+  name: string;
+  version: string;
+  supportedNetworks: string[];
+  initialize(): Promise<void>;
+  isSupported(): boolean;
+  getBalance(address: string): Promise<string>;
+  getTokenBalance(tokenAddress: string, address: string): Promise<string>;
+  getTransactionHistory(address: string): Promise<TransactionResponse[]>;
+  estimateGas(transaction: TransactionRequest): Promise<string>;
+  getGasPrice(): Promise<string>;
+  getNonce(address: string): Promise<number>;
+}
+
+export interface DAppAdapterConfig {
+  type: 'uniswap' | 'opensea' | 'aave';
+  rpcUrl: string;
+  chainId: string;
+  contracts: Record<string, string>;
+  apiKey?: string;
+}
+
+export interface DAppAdapterFactory {
+  createAdapter(config: DAppAdapterConfig): Promise<DAppAdapter>;
 } 

@@ -12,6 +12,14 @@ declare global {
       on: (event: string, callback: (...args: unknown[]) => void) => void;
       removeListener: (event: string, callback: (...args: unknown[]) => void) => void;
     };
+    freoBus?: {
+      isConnected: () => boolean;
+      getAccount: () => Promise<string>;
+      connect: () => Promise<void>;
+      disconnect: () => Promise<void>;
+      on: (event: string, callback: (...args: unknown[]) => void) => void;
+      removeListener: (event: string, callback: (...args: unknown[]) => void) => void;
+    };
   }
 }
 
@@ -45,54 +53,56 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const checkWallet = async () => {
-      if (typeof window !== 'undefined' && window.ethereum) {
-        setIsFreoWallet(!!window.ethereum.isFreoWallet);
-        
-        try {
-          const accounts = await window.ethereum.request({ method: 'eth_accounts' }) as string[];
-          if (accounts.length > 0) {
-            setAccount(accounts[0]);
-            setIsConnected(true);
-            setConnectionStatus('connected');
-          }
-        } catch (error) {
-          console.error('Error checking wallet:', error);
-          setError('Failed to check wallet status');
-          setConnectionStatus('error');
-        }
+    // Check for FreoBus on load
+    if (typeof window !== 'undefined' && window.freoBus && window.freoBus.isConnected()) {
+      window.freoBus.getAccount().then((account: string) => {
+        setAccount(account);
+        setIsConnected(true);
+        setConnectionStatus('connected');
+      });
+    }
+
+    // Listen for FreoBus events
+    const handleFreoBusConnect = async () => {
+      if (window.freoBus) {
+        const account = await window.freoBus.getAccount();
+        setAccount(account);
+        setIsConnected(true);
+        setConnectionStatus('connected');
       }
     };
 
-    checkWallet();
+    const handleFreoBusDisconnect = () => {
+      setAccount(null);
+      setIsConnected(false);
+      setConnectionStatus('idle');
+    };
 
-    // Listen for account changes
-    if (window.ethereum) {
-      const handleAccountsChanged = (accounts: string[]) => {
-        if (accounts.length > 0) {
-          setAccount(accounts[0]);
-          setIsConnected(true);
-          setConnectionStatus('connected');
-        } else {
-          setAccount(null);
-          setIsConnected(false);
-          setConnectionStatus('idle');
-        }
-      };
+    window.freoBus?.on('FREOBUS_CONNECT', handleFreoBusConnect);
+    window.freoBus?.on('FREOBUS_DISCONNECT', handleFreoBusDisconnect);
 
-      window.ethereum.on('accountsChanged', handleAccountsChanged);
-      return () => {
-        window.ethereum?.removeListener('accountsChanged', handleAccountsChanged);
-      };
-    }
+    return () => {
+      window.freoBus?.removeListener('FREOBUS_CONNECT', handleFreoBusConnect);
+      window.freoBus?.removeListener('FREOBUS_DISCONNECT', handleFreoBusDisconnect);
+    };
   }, []);
 
   const connectWallet = async () => {
+    if (typeof window !== 'undefined' && window.freoBus) {
+      try {
+        setConnectionStatus('connecting');
+        setError(null);
+        await window.freoBus.connect(); // Should trigger FREOBUS_CONNECT event
+      } catch (error) {
+        setError('Failed to connect wallet via FreoBus');
+        setConnectionStatus('error');
+      }
+      return;
+    }
     if (typeof window !== 'undefined' && window.ethereum) {
       try {
         setConnectionStatus('connecting');
         setError(null);
-        
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' }) as string[];
         if (accounts.length > 0) {
           setAccount(accounts[0]);
@@ -100,7 +110,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           setConnectionStatus('connected');
         }
       } catch (error) {
-        console.error('Error connecting wallet:', error);
         setError('Failed to connect wallet');
         setConnectionStatus('error');
       }
@@ -111,6 +120,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const disconnectWallet = () => {
+    if (typeof window !== 'undefined' && window.freoBus) {
+      window.freoBus.disconnect(); // Should trigger FREOBUS_DISCONNECT event
+      return;
+    }
     setAccount(null);
     setIsConnected(false);
     setConnectionStatus('idle');

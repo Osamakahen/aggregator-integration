@@ -1,60 +1,37 @@
 "use client";
 
-import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
-interface NFTAsset {
+interface NFT {
   id: string;
   name: string;
   image_url: string;
-  description?: string;
-  collection?: {
-    name: string;
-  };
+  collection: { name: string };
+  description: string;
 }
 
 export default function OpenSeaPage() {
   const router = useRouter();
-  const [assets, setAssets] = useState<NFTAsset[]>([]);
+  const [nfts, setNfts] = useState<NFT[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Mock data since OpenSea API requires authentication
-    const mockAssets: NFTAsset[] = [
-      {
-        id: '1',
-        name: 'Bored Ape #1234',
-        image_url: 'https://i.seadn.io/gae/Ju9CkWtEd-okOh0GhJDLsgD5mrG5z3JmTR7J1N1Wif9L__fxleCW-0L_8T1jz9qOdbzT3c9ZmUjBZ0Iam1LvKm-w?auto=format&w=1000',
-        description: 'A unique Bored Ape NFT',
-        collection: { name: 'Bored Ape Yacht Club' }
-      },
-      {
-        id: '2',
-        name: 'CryptoPunk #5678',
-        image_url: 'https://i.seadn.io/gae/BdxvLseXcfl57BiuQcQYdJ64v-aI8din7WPk0Pgo3qQFhAUH-B6i-dCqqc_mCkRIzULmwzwecnohLhrcH8A9mpWIZqA7ygc52Sr81hE?auto=format&w=1000',
-        description: 'A rare CryptoPunk',
-        collection: { name: 'CryptoPunks' }
-      },
-      {
-        id: '3',
-        name: 'Doodle #9012',
-        image_url: 'https://i.seadn.io/gae/7B0qai02OdHA8P_EOVK672qUliyjQdQDGNrACxs7WnTgZAkJa_wWURnIFKeOh5VTf8cfTqW3wQpozneeeda9dB2IB=s500',
-        description: 'A colorful Doodle',
-        collection: { name: 'Doodles' }
-      }
-    ];
-
-    try {
-      // Simulate API delay
-      setTimeout(() => {
-        setAssets(mockAssets);
+    const fetchNFTs = async () => {
+      try {
+        const response = await fetch(
+          'https://api.opensea.io/api/v1/assets?order_direction=desc&limit=3'
+        );
+        const data = await response.json();
+        setNfts(data.assets || []);
+      } catch (err) {
+        setError('Failed to fetch NFT data');
+      } finally {
         setLoading(false);
-      }, 1000);
-    } catch (err) {
-      setError('Failed to load NFT data');
-      setLoading(false);
-    }
+      }
+    };
+    fetchNFTs();
   }, []);
 
   return (
@@ -71,31 +48,25 @@ export default function OpenSeaPage() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
         </div>
       ) : error ? (
-        <div className="text-red-500 p-4 bg-red-900/20 rounded">
-          {error}
-        </div>
+        <div className="text-red-500 p-4 bg-red-900/20 rounded">{error}</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {assets.map(asset => (
-            <div key={asset.id} className="bg-gray-800 rounded-lg overflow-hidden shadow-lg">
-              <img 
-                src={asset.image_url} 
-                alt={asset.name} 
-                className="w-full h-48 object-cover"
-              />
-              <div className="p-4">
-                <h3 className="text-xl font-semibold mb-2">{asset.name}</h3>
-                {asset.collection && (
-                  <p className="text-gray-400 text-sm mb-2">
-                    {asset.collection.name}
-                  </p>
-                )}
-                {asset.description && (
-                  <p className="text-gray-300 text-sm">
-                    {asset.description}
-                  </p>
-                )}
-              </div>
+          {nfts.map(nft => (
+            <div key={nft.id} className="bg-gray-800 rounded-lg p-6 shadow-lg">
+              {nft.image_url ? (
+                <img
+                  src={nft.image_url}
+                  alt={nft.name}
+                  className="w-full h-48 object-cover rounded mb-4"
+                />
+              ) : (
+                <div className="w-full h-48 bg-gray-700 rounded mb-4 flex items-center justify-center text-gray-400">
+                  No Image
+                </div>
+              )}
+              <div className="font-bold text-lg">{nft.name}</div>
+              <div className="text-gray-400 text-sm">{nft.collection?.name}</div>
+              <div className="text-gray-300 text-xs mt-2 line-clamp-2">{nft.description}</div>
             </div>
           ))}
         </div>

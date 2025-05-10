@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 import type { Network, Account, TransactionRequest, WalletState, ConnectedSite, WalletBridgeConfig, Session, UnifiedSession, SessionProof } from './types';
+import { ethers } from 'ethers';
 
 const DEFAULT_NETWORKS: Network[] = [
   {
@@ -237,17 +238,30 @@ export class WalletBridge extends EventEmitter {
     if (!this.state.isUnlocked) {
       throw new Error('Wallet must be unlocked to send a transaction');
     }
-
     if (!this.state.selectedAccount) {
       throw new Error('No account selected');
     }
-
     if (tx.chainId !== this.state.selectedNetwork.chainId) {
       throw new Error('Transaction chainId does not match selected network');
     }
 
-    // TODO: Implement actual transaction sending
-    return '0x...'; // Replace with actual transaction hash
+    // Use ethers.js to send a real transaction on Sepolia
+    // You need to have a provider and signer set up for Sepolia
+    const provider = new ethers.providers.JsonRpcProvider(this.state.selectedNetwork.rpcUrl);
+    // For demonstration, assume the private key is available (replace with secure key management in production)
+    const privateKey = this.state.selectedAccount.privateKey;
+    if (!privateKey) throw new Error('No private key available for selected account');
+    const signer = new ethers.Wallet(privateKey, provider);
+
+    const txRequest = {
+      to: tx.to,
+      value: ethers.utils.parseEther(tx.value),
+      gasLimit: tx.gasLimit || 21000,
+      // Optionally add gasPrice, data, etc.
+    };
+    const txResponse = await signer.sendTransaction(txRequest);
+    await txResponse.wait(); // Wait for confirmation
+    return txResponse.hash;
   }
 
   async switchChain(chainId: string): Promise<boolean> {

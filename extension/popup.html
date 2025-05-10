@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>FreoWallet</title>
+  <style>
+    body {
+      width: 360px;
+      min-height: 500px;
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      background: #1E1E1E;
+      color: white;
+    }
+
+    .container {
+      padding: 20px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: bold;
+      color: #FFD700;
+    }
+
+    .account-info {
+      background: #2D2D2D;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+
+    .address {
+      font-family: monospace;
+      font-size: 14px;
+      color: #FFD700;
+      word-break: break-all;
+    }
+
+    .balance {
+      margin-top: 8px;
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .button {
+      background: #FFD700;
+      color: black;
+      border: none;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .button:hover {
+      background: #FFE55C;
+    }
+
+    .button.secondary {
+      background: #2D2D2D;
+      color: white;
+    }
+
+    .button.secondary:hover {
+      background: #3D3D3D;
+    }
+
+    .network-selector {
+      background: #2D2D2D;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 20px;
+    }
+
+    .network-selector select {
+      width: 100%;
+      padding: 8px;
+      border-radius: 4px;
+      background: #1E1E1E;
+      color: white;
+      border: 1px solid #3D3D3D;
+    }
+
+    .status {
+      text-align: center;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .status.connected {
+      background: #2D2D2D;
+      color: #4CAF50;
+    }
+
+    .status.disconnected {
+      background: #2D2D2D;
+      color: #F44336;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">FreoWallet</div>
+    </div>
+
+    <div id="accountInfo" class="account-info" style="display: none;">
+      <div class="address" id="accountAddress"></div>
+      <div class="balance" id="accountBalance">0.00 ETH</div>
+    </div>
+
+    <div id="connectionStatus" class="status disconnected">
+      Not Connected
+    </div>
+
+    <div class="network-selector">
+      <select id="networkSelect">
+        <option value="0x1">Ethereum Mainnet</option>
+        <option value="0x5">Goerli Testnet</option>
+        <option value="0xaa36a7">Sepolia Testnet</option>
+      </select>
+    </div>
+
+    <div class="actions">
+      <button id="connectButton" class="button">Connect</button>
+      <button id="disconnectButton" class="button secondary" style="display: none;">Disconnect</button>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html> 

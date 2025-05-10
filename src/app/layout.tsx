@@ -2,6 +2,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 import { WalletProvider } from './context/WalletContext';
 import { NetworkProvider } from './context/NetworkContext';
+import { DAppProvider } from './components/DAppProvider';
 
 export const metadata: Metadata = {
   title: 'FreoWallet',
@@ -18,9 +19,11 @@ export default function RootLayout({
       <body>
         <WalletProvider>
           <NetworkProvider>
-            <main className="min-h-screen bg-[#1E1E1E] text-white">
-              {children}
-            </main>
+            <DAppProvider>
+              <main className="min-h-screen bg-[#1E1E1E] text-white">
+                {children}
+              </main>
+            </DAppProvider>
           </NetworkProvider>
         </WalletProvider>
       </body>

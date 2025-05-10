@@ -17,6 +17,8 @@ The project is organized into three main components:
    - Secure key management
    - Transaction signing
    - Cross-dApp communication
+   - **Seed phrase backup and recovery**
+   - **Restore and connect flows for existing wallets**
 
 3. **Deployment Package** (`freobus-deploy/`): Production-ready deployment configuration
    - Vercel deployment setup
@@ -37,6 +39,8 @@ The project is organized into three main components:
   - Multi-chain support
   - Transaction signing
   - Account management
+  - **Seed phrase backup and restore**
+  - **Connect to existing wallet**
 
 - **Cross-dApp Communication**
   - Secure message passing
@@ -50,6 +54,9 @@ The project is organized into three main components:
 - Price impact limits
 - Gas optimization
 - Error recovery system
+- **Mandatory seed phrase backup for all new wallets**
+- **Restore wallet using seed phrase**
+- **Connect to existing wallet with password**
 
 ## Getting Started
 
@@ -71,6 +78,28 @@ npm install
 # Build the project
 npm run build
 ```
+
+### Chrome Extension: Onboarding, Restore, and Connect
+
+- **Create New Wallet:**
+  - Click "Create New Wallet" on the landing page.
+  - Set a strong password.
+  - A 12-word seed phrase will be generated. **Back up your seed phrase securely.**
+  - Confirm backup to complete wallet creation.
+
+- **Restore Wallet:**
+  - Click "Restore from Seed Phrase" on the landing page.
+  - Enter your 12-word seed phrase and set a new password.
+  - Your wallet and accounts will be restored securely.
+
+- **Connect Existing Wallet:**
+  - Click "Connect Existing Wallet" if you have previously set up a wallet in this extension.
+  - Enter your password to unlock your wallet.
+
+- **Security:**
+  - The extension enforces seed phrase backup for all new wallets.
+  - You can always restore your wallet using your seed phrase if you lose access.
+  - **Never share your seed phrase or password with anyone.**
 
 ### Development
 
@@ -111,6 +140,8 @@ NEXT_PUBLIC_FLASHBOTS_RPC_URL=optional_flashbots_endpoint
 - Secure storage using @plasmohq/storage
 - Cross-dApp messaging using @plasmohq/messaging
 - Background service worker for secure operations
+- **Seed phrase backup and restore flows**
+- **Connect, create, and restore onboarding**
 
 ### Smart Contracts
 - Written in Solidity
@@ -125,6 +156,8 @@ NEXT_PUBLIC_FLASHBOTS_RPC_URL=optional_flashbots_endpoint
 - MEV protection through Flashbots
 - Price impact limits to prevent sandwich attacks
 - Gas optimization to minimize costs
+- **Seed phrase backup and restore required for all users**
+- **Restore and connect flows for maximum recoverability**
 
 ## Contributing
 

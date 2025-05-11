@@ -30,6 +30,13 @@ const NetworkContext = createContext<NetworkContextType>({
 
 export const useNetwork = () => useContext(NetworkContext);
 
+// Utility to ensure chainId is hex
+function toHexChainId(chainId: string | number) {
+  if (typeof chainId === 'number') return '0x' + chainId.toString(16);
+  if (typeof chainId === 'string' && chainId.startsWith('0x')) return chainId;
+  return '0x' + parseInt(chainId, 10).toString(16);
+}
+
 export const NetworkProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [chainId, setChainId] = useState<string | null>(null);
 
@@ -71,7 +78,7 @@ export const NetworkProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       await window.ethereum.request({
         method: 'wallet_switchEthereumChain',
-        params: [{ chainId: targetChainId }],
+        params: [{ chainId: toHexChainId(targetChainId) }],
       });
     } catch (error) {
       const switchError = error as SwitchNetworkError;

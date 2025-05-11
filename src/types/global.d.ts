@@ -1,11 +1,13 @@
+export {};
+
 declare global {
   interface Window {
     ethereum?: {
       isFreoWallet?: boolean;
-      request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
-      send: (method: string, params: unknown[]) => Promise<unknown>;
-      on: (event: string, callback: (...args: unknown[]) => void) => void;
-      removeListener: (event: string, callback: (...args: unknown[]) => void) => void;
+      request: (args: { method: string; params?: any[] }) => Promise<any>;
+      send?: (method: string, params: any[]) => Promise<any>;
+      on: (eventName: string, handler: (...args: any[]) => void) => void;
+      removeListener: (eventName: string, handler: (...args: any[]) => void) => void;
     };
     freoBus?: {
       isConnected: () => boolean;
@@ -16,6 +18,4 @@ declare global {
       removeListener: (event: string, callback: (...args: unknown[]) => void) => void;
     };
   }
-}
-
-export {}; 
+} 

@@ -148,6 +148,19 @@ export default function MarketplacePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-400 via-green-600 to-green-800 text-white px-4 py-8">
       <div className="max-w-5xl mx-auto">
+        {/* Banner for not connected */}
+        {!isConnected && (
+          <div className="mb-4 p-4 bg-yellow-100 text-yellow-900 rounded flex items-center justify-between">
+            <span>You are not connected. Connect your FreoWallet for full functionality.</span>
+            <button
+              className="ml-4 px-4 py-2 bg-[#FFD700] text-black rounded hover:bg-[#FFE55C] font-semibold"
+              onClick={handleGetWallet}
+              disabled={connectionStatus === 'connecting'}
+            >
+              {connectionStatus === 'connecting' ? 'Connecting...' : 'Connect Wallet'}
+            </button>
+          </div>
+        )}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl sm:text-4xl font-bold text-center">Web3 Marketplace</h1>
           <div className="flex items-center gap-4">

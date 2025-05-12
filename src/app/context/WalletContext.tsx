@@ -3,25 +3,12 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { ethers } from 'ethers';
 
-declare global {
-  interface Window {
-    ethereum?: {
-      isFreoWallet?: boolean;
-      request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
-      send: (method: string, params: unknown[]) => Promise<unknown>;
-      on: (event: string, callback: (...args: unknown[]) => void) => void;
-      removeListener: (event: string, callback: (...args: unknown[]) => void) => void;
-    };
-    freoBus?: {
-      isConnected: () => boolean;
-      getAccount: () => Promise<string>;
-      connect: () => Promise<void>;
-      disconnect: () => Promise<void>;
-      on: (event: string, callback: (...args: unknown[]) => void) => void;
-      removeListener: (event: string, callback: (...args: unknown[]) => void) => void;
-    };
-  }
-}
+type EthereumProvider = {
+  request: (args: { method: string; params?: any[] }) => Promise<any>;
+  on: (eventName: string, handler: (...args: any[]) => void) => void;
+  removeListener: (eventName: string, handler: (...args: any[]) => void) => void;
+  [key: string]: any;
+};
 
 interface WalletContextType {
   account: string | null;
@@ -61,8 +48,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Check for FreoWallet extension
   useEffect(() => {
     const checkFreoWallet = () => {
-      if (typeof window !== 'undefined') {
-        const hasFreoWallet = !!(window.ethereum && window.ethereum.isFreoWallet);
+      if (typeof window !== 'undefined' && window.ethereum) {
+        const hasFreoWallet = !!((window.ethereum as any).isFreoWallet);
         setIsFreoWallet(hasFreoWallet);
       }
     };
@@ -136,9 +123,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const checkConnection = async () => {
       if (window.ethereum) {
         try {
-          const accounts = await window.ethereum.request({ method: 'eth_accounts' }) as string[];
-          if (accounts.length > 0) {
+          const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+          if (Array.isArray(accounts) && accounts.length > 0) {
             await updateWalletState(accounts[0]);
+          } else {
+            await updateWalletState(null);
           }
         } catch (error) {
           console.error('Auto-connect failed:', error);
@@ -154,9 +143,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       try {
         setConnectionStatus('connecting');
         setError(null);
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' }) as string[];
-        if (accounts.length > 0) {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        if (Array.isArray(accounts) && accounts.length > 0) {
           await updateWalletState(accounts[0]);
+        } else {
+          setError('No accounts returned from wallet');
+          setConnectionStatus('error');
         }
       } catch (error) {
         setError('Failed to connect wallet');

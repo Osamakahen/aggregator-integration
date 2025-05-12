@@ -3,9 +3,11 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 // import FreoWalletOnboardingModal from '../components/FreoWalletOnboardingModal';
 
 export default function Home() {
+  const router = useRouter();
   // const [onboardingOpen, setOnboardingOpen] = useState(false);
 
   // const handleGetWallet = () => {
@@ -39,6 +41,7 @@ export default function Home() {
             </Link>
             <button 
               className="px-4 py-2 bg-[#FFD700] text-black rounded hover:bg-[#FFE55C] transition-all hover:scale-105"
+              onClick={() => router.push('/connect')}
             >
               Connect Wallet
             </button>

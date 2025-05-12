@@ -2,35 +2,22 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useWallet } from '../context/WalletContext';
 
 export default function ConnectWallet() {
   const router = useRouter();
-  const [isExtensionInstalled, setIsExtensionInstalled] = useState(false);
+  const { isFreoWallet, connectWallet, connectionStatus, error } = useWallet();
   const [isConnecting, setIsConnecting] = useState(false);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    // Check if FreoBus extension is installed
-    if (typeof window !== 'undefined' && window.freoBus) {
-      setIsExtensionInstalled(true);
-    }
-  }, []);
 
   const handleConnect = async () => {
     try {
       setIsConnecting(true);
-      setError('');
-      
-      if (!window.freoBus) {
-        throw new Error('FreoBus extension not found');
+      await connectWallet();
+      if (connectionStatus === 'connected') {
+        router.push('/marketplace');
       }
-
-      await window.freoBus.connect();
-      
-      // After successful connection, redirect to marketplace
-      router.push('/marketplace');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to connect wallet');
+      console.error('Connection failed:', err);
     } finally {
       setIsConnecting(false);
     }
@@ -45,21 +32,21 @@ export default function ConnectWallet() {
       <div className="max-w-2xl mx-auto text-center">
         <h1 className="text-4xl font-bold mb-8">Connect Your Wallet</h1>
 
-        {!isExtensionInstalled ? (
+        {!isFreoWallet ? (
           <div className="bg-[#2A2A2A] p-8 rounded-lg">
-            <h2 className="text-2xl mb-4">FreoBus Extension Required</h2>
-            <p className="mb-6">Please install the FreoBus extension to connect your wallet.</p>
+            <h2 className="text-2xl mb-4">FreoWallet Extension Required</h2>
+            <p className="mb-6">Please install the FreoWallet extension to connect your wallet.</p>
             <button
               onClick={handleInstallClick}
               className="px-8 py-4 bg-[#FFD700] text-black rounded-lg hover:bg-[#FFE55C] transition-colors font-semibold"
             >
-              Install FreoBus Extension
+              Install FreoWallet Extension
             </button>
           </div>
         ) : (
           <div className="bg-[#2A2A2A] p-8 rounded-lg">
-            <h2 className="text-2xl mb-4">Connect with FreoBus</h2>
-            <p className="mb-6">Click below to connect your existing FreoBus wallet.</p>
+            <h2 className="text-2xl mb-4">Connect with FreoWallet</h2>
+            <p className="mb-6">Click below to connect your FreoWallet.</p>
             <button
               onClick={handleConnect}
               disabled={isConnecting}

@@ -58,6 +58,17 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [chainId, setChainId] = useState<string | null>(null);
   const [balance, setBalance] = useState<string | null>(null);
 
+  // Check for FreoWallet extension
+  useEffect(() => {
+    const checkFreoWallet = () => {
+      if (typeof window !== 'undefined') {
+        const hasFreoWallet = !!(window.ethereum && window.ethereum.isFreoWallet);
+        setIsFreoWallet(hasFreoWallet);
+      }
+    };
+    checkFreoWallet();
+  }, []);
+
   // Helper function to update wallet state
   const updateWalletState = useCallback(async (account: string | null) => {
     if (!account) {
@@ -123,14 +134,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Auto-connect on load
   useEffect(() => {
     const checkConnection = async () => {
-      if (window.freoBus?.isConnected()) {
-        try {
-          const account = await window.freoBus.getAccount();
-          await updateWalletState(account);
-        } catch (error) {
-          console.error('Auto-connect failed:', error);
-        }
-      } else if (window.ethereum) {
+      if (window.ethereum) {
         try {
           const accounts = await window.ethereum.request({ method: 'eth_accounts' }) as string[];
           if (accounts.length > 0) {
@@ -146,19 +150,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [updateWalletState]);
 
   const connectWallet = async () => {
-    if (typeof window !== 'undefined' && window.freoBus) {
-      try {
-        setConnectionStatus('connecting');
-        setError(null);
-        await window.freoBus.connect();
-        const account = await window.freoBus.getAccount();
-        await updateWalletState(account);
-      } catch (error) {
-        setError('Failed to connect wallet via FreoBus');
-        setConnectionStatus('error');
-      }
-      return;
-    }
     if (typeof window !== 'undefined' && window.ethereum) {
       try {
         setConnectionStatus('connecting');
@@ -177,16 +168,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
-  const disconnectWallet = async () => {
-    if (typeof window !== 'undefined' && window.freoBus) {
-      try {
-        await window.freoBus.disconnect();
-        updateWalletState(null);
-      } catch (error) {
-        console.error('Disconnect failed:', error);
-      }
-      return;
-    }
+  const disconnectWallet = () => {
     updateWalletState(null);
   };
 

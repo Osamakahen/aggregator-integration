@@ -5,7 +5,7 @@ import AppCard from "../../components/marketplace/AppCard";
 import CategoryGrid from "../../components/marketplace/CategoryGrid";
 import SearchBar from "../../components/marketplace/SearchBar";
 import { useWallet } from "../context/WalletContext";
-import FreoWalletOnboardingModal from "../../components/FreoWalletOnboardingModal";
+import { useRouter } from "next/navigation";
 
 const categories = [
   { id: "defi", name: "DeFi", icon: "defi" as const },
@@ -61,77 +61,23 @@ const sampleApps = [
     easyConnect: false,
     url: "https://app.compound.finance/",
   },
-  {
-    id: "sushiswap",
-    name: "SushiSwap",
-    description: "Community-driven decentralized exchange.",
-    logo: "https://cryptologos.cc/logos/sushiswap-sushi-logo.png",
-    category: "exchange",
-    isVerified: true,
-    rating: 4,
-    easyConnect: false,
-    url: "https://app.sushi.com/",
-  },
-  {
-    id: "lens",
-    name: "Lens Protocol",
-    description: "A composable and decentralized social graph.",
-    logo: "https://avatars.githubusercontent.com/u/87761809?s=200&v=4",
-    category: "social",
-    isVerified: true,
-    rating: 4,
-    easyConnect: false,
-    url: "https://www.lens.xyz/",
-  },
-  {
-    id: "farcaster",
-    name: "Farcaster",
-    description: "Decentralized social network protocol.",
-    logo: "https://pbs.twimg.com/profile_images/1635732108882223104/0QwQ6QkA_400x400.jpg",
-    category: "social",
-    isVerified: false,
-    rating: 3,
-    easyConnect: false,
-    url: "https://www.farcaster.xyz/",
-  },
 ];
 
 export default function MarketplacePage() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { isConnected, connectWallet, disconnectWallet, connectionStatus, error, isFreoWallet } = useWallet();
-  const [onboardingOpen, setOnboardingOpen] = useState(false);
-  const [providerStatus, setProviderStatus] = useState<string>("Checking...");
-
-  useEffect(() => {
-    let tries = 0;
-    const maxTries = 50; // 5 seconds if interval is 100ms
-    const interval = setInterval(() => {
-      if (window.ethereum) {
-        setProviderStatus('Provider detected');
-        clearInterval(interval);
-      } else if (++tries > maxTries) {
-        setProviderStatus('No provider detected');
-        clearInterval(interval);
-      }
-    }, 100);
-    return () => clearInterval(interval);
-  }, []);
+  const router = useRouter();
 
   const handleGetWallet = async () => {
-    if (typeof window !== 'undefined' && window.ethereum) {
+    if (!isFreoWallet) {
+      window.open('https://chrome.google.com/webstore/detail/freobus-wallet', '_blank');
+    } else {
       try {
         await connectWallet();
-        if (connectionStatus === 'connected') {
-          setOnboardingOpen(true);
-        }
       } catch (err) {
         console.error('Failed to connect wallet:', err);
       }
-    } else {
-      // Production behavior - redirect to Chrome Web Store
-      window.open('https://chrome.google.com/webstore/detail/freobus-wallet', '_blank');
-      setOnboardingOpen(true);
     }
   };
 
@@ -164,9 +110,6 @@ export default function MarketplacePage() {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl sm:text-4xl font-bold text-center">Web3 Marketplace</h1>
           <div className="flex items-center gap-4">
-            <span className="text-sm bg-gray-800 px-3 py-1 rounded">
-              Provider Status: {providerStatus}
-            </span>
             {error && (
               <span className="text-sm bg-red-800 px-3 py-1 rounded">
                 {error}
@@ -227,12 +170,6 @@ export default function MarketplacePage() {
           )}
         </div>
       </div>
-      <FreoWalletOnboardingModal 
-        open={onboardingOpen} 
-        onClose={() => setOnboardingOpen(false)}
-        isConnected={isConnected}
-        connectionStatus={connectionStatus}
-      />
     </div>
   );
 } 

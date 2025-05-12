@@ -39,11 +39,9 @@ export const DAppProvider: React.FC<DAppProviderProps> = ({ children }) => {
   // Handle chain changes
   useEffect(() => {
     if (!window.ethereum) return;
-
     const handleChainChanged = () => {
-      window.location.reload();
+      setError('Network changed. Please reconnect your wallet if needed.');
     };
-
     window.ethereum.on('chainChanged', handleChainChanged);
     return () => {
       window.ethereum?.removeListener('chainChanged', handleChainChanged);
@@ -53,40 +51,25 @@ export const DAppProvider: React.FC<DAppProviderProps> = ({ children }) => {
   // Handle account changes
   useEffect(() => {
     if (!window.ethereum) return;
-
     const handleAccountsChanged = (accounts: string[]) => {
       if (accounts.length === 0) {
-        // Handle disconnect
-        window.location.reload();
+        setError('Wallet disconnected. Please connect your wallet.');
       }
     };
-
     window.ethereum.on('accountsChanged', handleAccountsChanged);
     return () => {
       window.ethereum?.removeListener('accountsChanged', handleAccountsChanged);
     };
   }, []);
 
-  if (error) {
-    return (
-      <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-        <h3 className="text-lg font-medium text-red-800">Provider Error</h3>
-        <p className="mt-2 text-sm text-red-600">{error}</p>
-      </div>
-    );
-  }
-
-  if (!isProviderReady) {
-    return (
-      <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-        <h3 className="text-lg font-medium text-yellow-800">Initializing Provider</h3>
-        <p className="mt-2 text-sm text-yellow-600">Please wait while we set up your Web3 connection...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-4">
+      {/* Non-blocking warning if no provider */}
+      {error && (
+        <div className="p-2 bg-yellow-100 text-yellow-900 rounded text-center">
+          <span>{error}</span>
+        </div>
+      )}
       {isConnected && account && (
         <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
           <h3 className="text-lg font-medium text-green-800">Connected to FreoWallet</h3>

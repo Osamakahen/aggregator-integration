@@ -37,29 +37,14 @@ const WalletPage: React.FC = () => {
     );
   }
 
+  // If extension is detected, show a message to open the extension
   return (
-    <div className="min-h-screen bg-[#1E1E1E] text-white p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8">Wallet</h1>
-        <div className="bg-[#2D2D2D] rounded-lg p-6 mb-8">
-          <h2 className="text-2xl font-semibold mb-4">Account Details</h2>
-          {isConnected && account ? (
-            <div>
-              <p className="mb-4">Account Address: {account}</p>
-              {/* Add more wallet functionality here */}
-            </div>
-          ) : (
-            <div>
-              <p className="mb-4">Connect your wallet to view your account details</p>
-              <button
-                onClick={connectWallet}
-                className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-              >
-                Connect Wallet
-              </button>
-            </div>
-          )}
-        </div>
+    <div className="min-h-screen bg-[#1E1E1E] text-white flex items-center justify-center">
+      <div className="bg-[#2A2A2A] p-8 rounded-lg text-center max-w-md mx-auto">
+        <h1 className="text-3xl font-bold mb-4">FreoWallet Detected!</h1>
+        <p className="mb-6">The FreoWallet extension is installed. Please open the extension from your browser toolbar to continue with wallet setup and management.</p>
+        <img src="/freowallet-extension-icon.png" alt="FreoWallet Extension Icon" className="mx-auto mb-4" style={{ width: 64, height: 64 }} />
+        <p className="text-gray-400 text-sm">Need help? <a href="https://chrome.google.com/webstore/detail/freobus-wallet" target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">Reinstall or learn more</a></p>
       </div>
     </div>
   );
